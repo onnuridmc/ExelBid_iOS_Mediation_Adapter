@@ -25,8 +25,7 @@ let package = Package(
     dependencies: [
         // Local path during development; switch to a versioned URL
         // (`https://github.com/.../exelbid-ios-sdk-v3.git`) at release.
-        .package(name: "ExelBidSDK", path: "../exelbid-ios-sdk-v3"),
-        // .package(url: "https://github.com/exelbid/exelbid-ios-sdk-v3.git", from: "3.0.0")
+        .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Swift", from: "3.0.0"),
 
         // Per-network SDKs. Versions are *minimum* — adapters should
         // remain source-compatible with the listed major version range.
