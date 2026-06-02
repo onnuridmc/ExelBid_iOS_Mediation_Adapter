@@ -7,8 +7,8 @@ import ExelBidSDK
 /// ```swift
 /// ExelBidMediationKit.shared.register(modules: [AdMobMediationModule.self])
 /// ```
-public enum AdMobMediationModule: MediationModule {
-    public static func register(in registry: MediationRegistry) {
+public enum AdMobMediationModule: EBMediationModule {
+    public static func register(in registry: EBMediationRegistry) {
         registry.register(banner: AdMobBannerAdapter.self)
         registry.register(interstitial: AdMobInterstitialAdapter.self)
         registry.register(native: AdMobNativeAdapter.self)

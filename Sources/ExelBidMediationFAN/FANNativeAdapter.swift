@@ -14,11 +14,11 @@ import FBAudienceNetwork
 /// FAN's native flow:
 /// 1. `FBNativeAd(placementID:)` + `loadAd()` issues the request.
 /// 2. `nativeAdDidLoad` yields the populated `FBNativeAd`.
-/// 3. Adapter normalises typed assets onto v3's `NativeAdModel`.
+/// 3. Adapter normalises typed assets onto v3's `EBNativeAdModel`.
 /// 4. `bind(view:viewController:)` calls
 ///    `FBNativeAd.registerView(forInteraction:withViewController:)` so
 ///    FAN attaches its own click + impression instrumentation.
-public final class FANNativeAdapter: NSObject, NativeMediationAdapter {
+public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
 
     public static let networkID = "fan"
     public static var isAvailable: Bool { true }
@@ -31,18 +31,18 @@ public final class FANNativeAdapter: NSObject, NativeMediationAdapter {
     public var onClickFinish: (() -> Void)?
 
     private var nativeAd: FBNativeAd?
-    private var continuation: CheckedContinuation<NativeAdModel, Error>?
+    private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
     public override init() { super.init() }
 
     public func load(
         unitId: String,
-        desiredAssets: Set<NativeAsset>,
+        desiredAssets: Set<EBNativeAsset>,
         rootViewController: UIViewController?,
         timeout: TimeInterval
-    ) async throws -> NativeAdModel {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<NativeAdModel, Error>) in
+    ) async throws -> EBNativeAdModel {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<EBNativeAdModel, Error>) in
             self.continuation = cont
             self.resumed = false
             DispatchQueue.main.async {
@@ -71,7 +71,7 @@ public final class FANNativeAdapter: NSObject, NativeMediationAdapter {
         resume(throwing: CancellationError())
     }
 
-    private func resume(returning model: NativeAdModel) {
+    private func resume(returning model: EBNativeAdModel) {
         guard !resumed else { return }
         resumed = true
         continuation?.resume(returning: model); continuation = nil
@@ -83,7 +83,7 @@ public final class FANNativeAdapter: NSObject, NativeMediationAdapter {
         continuation?.resume(throwing: error); continuation = nil
     }
 
-    private func normalise(_ ad: FBNativeAd) -> NativeAdModel {
+    private func normalise(_ ad: FBNativeAd) -> EBNativeAdModel {
         var payload: [String: Any] = [:]
         if let v = ad.advertiserName       { payload["title"] = v }
         if let v = ad.bodyText             { payload["desc"]  = v }
@@ -92,8 +92,8 @@ public final class FANNativeAdapter: NSObject, NativeMediationAdapter {
         if let v = ad.iconImage?.url?.absoluteString { payload["icon"] = v }
         if let v = ad.coverImage?.url?.absoluteString { payload["main"] = v }
         let data = (try? JSONSerialization.data(withJSONObject: payload)) ?? Data("{}".utf8)
-        return (try? JSONDecoder().decode(NativeAdModel.self, from: data))
-            ?? (try! JSONDecoder().decode(NativeAdModel.self, from: Data("{}".utf8)))
+        return (try? JSONDecoder().decode(EBNativeAdModel.self, from: data))
+            ?? (try! JSONDecoder().decode(EBNativeAdModel.self, from: Data("{}".utf8)))
     }
 }
 
@@ -117,7 +117,7 @@ extension FANNativeAdapter: FBNativeAdDelegate {
 
 #else
 
-public final class FANNativeAdapter: NSObject, NativeMediationAdapter {
+public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
     public static let networkID = "fan"
     public static var isAvailable: Bool { false }
 
@@ -130,7 +130,7 @@ public final class FANNativeAdapter: NSObject, NativeMediationAdapter {
 
     public override init() { super.init() }
 
-    public func load(unitId: String, desiredAssets: Set<NativeAsset>, rootViewController: UIViewController?, timeout: TimeInterval) async throws -> NativeAdModel {
+    public func load(unitId: String, desiredAssets: Set<EBNativeAsset>, rootViewController: UIViewController?, timeout: TimeInterval) async throws -> EBNativeAdModel {
         throw FANNativeAdapterError.sdkNotLinked
     }
     public func bind(view: UIView, viewController: UIViewController?) {}

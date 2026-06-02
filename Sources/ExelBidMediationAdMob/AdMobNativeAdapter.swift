@@ -12,13 +12,13 @@ import GoogleMobileAds
 /// 1. `AdLoader` issues the request.
 /// 2. The `nativeAdLoader(_:didReceive:)` delegate yields a
 ///    `GoogleMobileAds.NativeAd` object containing typed assets.
-/// 3. The adapter normalises those assets onto v3's `NativeAdModel`
+/// 3. The adapter normalises those assets onto v3's `EBNativeAdModel`
 ///    and returns it from `load(...)`.
 /// 4. The orchestrator/façade renders the model into the host's view.
 /// 5. `bind(view:viewController:)` registers the rendered view with
 ///    AdMob via `NativeAdView.nativeAd = ...` so AdMob can attach
 ///    its own click + impression instrumentation.
-public final class AdMobNativeAdapter: NSObject, NativeMediationAdapter {
+public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
 
     public static let networkID = "admob"
     public static var isAvailable: Bool { true }
@@ -33,18 +33,18 @@ public final class AdMobNativeAdapter: NSObject, NativeMediationAdapter {
     private var loader: AdLoader?
     private var nativeAd: GoogleMobileAds.NativeAd?
     private var nativeAdView: NativeAdView?
-    private var continuation: CheckedContinuation<NativeAdModel, Error>?
+    private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
     public override init() { super.init() }
 
     public func load(
         unitId: String,
-        desiredAssets: Set<NativeAsset>,
+        desiredAssets: Set<EBNativeAsset>,
         rootViewController: UIViewController?,
         timeout: TimeInterval
-    ) async throws -> NativeAdModel {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<NativeAdModel, Error>) in
+    ) async throws -> EBNativeAdModel {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<EBNativeAdModel, Error>) in
             self.continuation = cont
             self.resumed = false
 
@@ -99,7 +99,7 @@ public final class AdMobNativeAdapter: NSObject, NativeMediationAdapter {
 
     // MARK: - Helpers
 
-    private func resume(returning model: NativeAdModel) {
+    private func resume(returning model: EBNativeAdModel) {
         guard !resumed else { return }
         resumed = true
         continuation?.resume(returning: model); continuation = nil
@@ -111,11 +111,11 @@ public final class AdMobNativeAdapter: NSObject, NativeMediationAdapter {
         continuation?.resume(throwing: error); continuation = nil
     }
 
-    /// Normalise AdMob's typed assets onto v3's `NativeAdModel` shape.
-    /// `NativeAdModel` is JSON-decodable — we build a small JSON
+    /// Normalise AdMob's typed assets onto v3's `EBNativeAdModel` shape.
+    /// `EBNativeAdModel` is JSON-decodable — we build a small JSON
     /// payload that mirrors what the ExelBid server would have
     /// returned for the equivalent assets and decode through that.
-    private func normalise(_ ad: GoogleMobileAds.NativeAd) -> NativeAdModel {
+    private func normalise(_ ad: GoogleMobileAds.NativeAd) -> EBNativeAdModel {
         var payload: [String: Any] = [:]
         if let v = ad.headline       { payload["title"] = v }
         if let v = ad.body           { payload["desc"]  = v }
@@ -129,8 +129,8 @@ public final class AdMobNativeAdapter: NSObject, NativeMediationAdapter {
             payload["main"] = v
         }
         let data = (try? JSONSerialization.data(withJSONObject: payload)) ?? Data("{}".utf8)
-        return (try? JSONDecoder().decode(NativeAdModel.self, from: data))
-            ?? (try! JSONDecoder().decode(NativeAdModel.self, from: Data("{}".utf8)))
+        return (try? JSONDecoder().decode(EBNativeAdModel.self, from: data))
+            ?? (try! JSONDecoder().decode(EBNativeAdModel.self, from: Data("{}".utf8)))
     }
 }
 

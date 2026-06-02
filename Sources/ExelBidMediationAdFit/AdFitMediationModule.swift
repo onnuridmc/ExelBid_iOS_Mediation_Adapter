@@ -1,8 +1,8 @@
 import Foundation
 import ExelBidSDK
 
-public enum AdFitMediationModule: MediationModule {
-    public static func register(in registry: MediationRegistry) {
+public enum AdFitMediationModule: EBMediationModule {
+    public static func register(in registry: EBMediationRegistry) {
         registry.register(banner: AdFitBannerAdapter.self)
         registry.register(interstitial: AdFitInterstitialAdapter.self)
         registry.register(native: AdFitNativeAdapter.self)

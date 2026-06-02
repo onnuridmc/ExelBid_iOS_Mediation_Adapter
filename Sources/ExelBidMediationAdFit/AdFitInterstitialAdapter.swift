@@ -11,7 +11,7 @@ import ExelBidSDK
 #if canImport(AdFitSDK)
 import AdFitSDK
 
-public final class AdFitInterstitialAdapter: NSObject, InterstitialMediationAdapter {
+public final class AdFitInterstitialAdapter: NSObject, EBInterstitialMediationAdapter {
 
     public static let networkID = "adfit"
     public static var isAvailable: Bool { true }
@@ -99,7 +99,7 @@ extension AdFitInterstitialAdapter: AdFitInterstitialAdDelegate {
 
 #else
 
-public final class AdFitInterstitialAdapter: NSObject, InterstitialMediationAdapter {
+public final class AdFitInterstitialAdapter: NSObject, EBInterstitialMediationAdapter {
     public static let networkID = "adfit"
     public static var isAvailable: Bool { false }
 

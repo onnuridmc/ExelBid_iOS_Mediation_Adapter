@@ -8,60 +8,60 @@ final class AdapterRegistrationTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        MediationRegistry.shared.removeAllForTesting()
+        EBMediationRegistry.shared.removeAllForTesting()
     }
 
     override func tearDown() {
-        MediationRegistry.shared.removeAllForTesting()
+        EBMediationRegistry.shared.removeAllForTesting()
         super.tearDown()
     }
 
     func test_admob_module_registers_banner_adapter() {
-        AdMobMediationModule.register(in: MediationRegistry.shared)
-        let resolved = MediationRegistry.shared.bannerAdapter(for: "admob")
+        AdMobMediationModule.register(in: EBMediationRegistry.shared)
+        let resolved = EBMediationRegistry.shared.bannerAdapter(for: "admob")
         XCTAssertNotNil(resolved)
         XCTAssertEqual(resolved?.networkID, "admob")
     }
 
     func test_admob_module_registers_all_four_formats() {
-        AdMobMediationModule.register(in: MediationRegistry.shared)
-        XCTAssertNotNil(MediationRegistry.shared.bannerAdapter(for: "admob"))
-        XCTAssertNotNil(MediationRegistry.shared.interstitialAdapter(for: "admob"))
-        XCTAssertNotNil(MediationRegistry.shared.nativeAdapter(for: "admob"))
-        XCTAssertNotNil(MediationRegistry.shared.videoAdapter(for: "admob"))
+        AdMobMediationModule.register(in: EBMediationRegistry.shared)
+        XCTAssertNotNil(EBMediationRegistry.shared.bannerAdapter(for: "admob"))
+        XCTAssertNotNil(EBMediationRegistry.shared.interstitialAdapter(for: "admob"))
+        XCTAssertNotNil(EBMediationRegistry.shared.nativeAdapter(for: "admob"))
+        XCTAssertNotNil(EBMediationRegistry.shared.videoAdapter(for: "admob"))
     }
 
     func test_fan_module_registers_banner_adapter() {
-        FANMediationModule.register(in: MediationRegistry.shared)
+        FANMediationModule.register(in: EBMediationRegistry.shared)
         XCTAssertEqual(
-            MediationRegistry.shared.bannerAdapter(for: "fan")?.networkID,
+            EBMediationRegistry.shared.bannerAdapter(for: "fan")?.networkID,
             "fan"
         )
     }
 
     func test_fan_module_registers_all_four_formats() {
-        FANMediationModule.register(in: MediationRegistry.shared)
-        XCTAssertNotNil(MediationRegistry.shared.bannerAdapter(for: "fan"))
-        XCTAssertNotNil(MediationRegistry.shared.interstitialAdapter(for: "fan"))
-        XCTAssertNotNil(MediationRegistry.shared.nativeAdapter(for: "fan"))
-        XCTAssertNotNil(MediationRegistry.shared.videoAdapter(for: "fan"))
+        FANMediationModule.register(in: EBMediationRegistry.shared)
+        XCTAssertNotNil(EBMediationRegistry.shared.bannerAdapter(for: "fan"))
+        XCTAssertNotNil(EBMediationRegistry.shared.interstitialAdapter(for: "fan"))
+        XCTAssertNotNil(EBMediationRegistry.shared.nativeAdapter(for: "fan"))
+        XCTAssertNotNil(EBMediationRegistry.shared.videoAdapter(for: "fan"))
     }
 
     func test_adfit_module_registers_banner_adapter() {
-        AdFitMediationModule.register(in: MediationRegistry.shared)
+        AdFitMediationModule.register(in: EBMediationRegistry.shared)
         XCTAssertEqual(
-            MediationRegistry.shared.bannerAdapter(for: "adfit")?.networkID,
+            EBMediationRegistry.shared.bannerAdapter(for: "adfit")?.networkID,
             "adfit"
         )
     }
 
     func test_adfit_module_registers_banner_interstitial_native() {
-        AdFitMediationModule.register(in: MediationRegistry.shared)
-        XCTAssertNotNil(MediationRegistry.shared.bannerAdapter(for: "adfit"))
-        XCTAssertNotNil(MediationRegistry.shared.interstitialAdapter(for: "adfit"))
-        XCTAssertNotNil(MediationRegistry.shared.nativeAdapter(for: "adfit"))
+        AdFitMediationModule.register(in: EBMediationRegistry.shared)
+        XCTAssertNotNil(EBMediationRegistry.shared.bannerAdapter(for: "adfit"))
+        XCTAssertNotNil(EBMediationRegistry.shared.interstitialAdapter(for: "adfit"))
+        XCTAssertNotNil(EBMediationRegistry.shared.nativeAdapter(for: "adfit"))
         // AdFit SDK has no video format — verify no video registration
-        XCTAssertNil(MediationRegistry.shared.videoAdapter(for: "adfit"))
+        XCTAssertNil(EBMediationRegistry.shared.videoAdapter(for: "adfit"))
     }
 
     func test_kit_register_multiple_modules() {
@@ -71,7 +71,7 @@ final class AdapterRegistrationTests: XCTestCase {
             AdFitMediationModule.self
         ])
         XCTAssertEqual(
-            Set(MediationRegistry.shared.registeredBannerNetworks()),
+            Set(EBMediationRegistry.shared.registeredBannerNetworks()),
             Set(["admob", "fan", "adfit"])
         )
     }

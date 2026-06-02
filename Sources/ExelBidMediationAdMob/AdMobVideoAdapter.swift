@@ -3,7 +3,7 @@
 //
 // AdMob's fullscreen video offerings are RewardedAd (incentivised) and
 // RewardedInterstitialAd. This adapter uses `RewardedAd` since v3's
-// `VideoAd` is the closest semantic match (fullscreen video with
+// `EBVideoAd` is the closest semantic match (fullscreen video with
 // VAST-style progress) and ExelBid does not currently differentiate
 // reward grants from the SDK surface. If you need true rewarded-grant
 // signaling, register a custom adapter (see USAGE_GUIDE §7).
@@ -13,7 +13,7 @@ import UIKit
 import ExelBidSDK
 import GoogleMobileAds
 
-public final class AdMobVideoAdapter: NSObject, VideoMediationAdapter {
+public final class AdMobVideoAdapter: NSObject, EBVideoMediationAdapter {
 
     public static let networkID = "admob"
     public static var isAvailable: Bool { true }

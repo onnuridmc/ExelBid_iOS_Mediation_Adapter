@@ -2,7 +2,7 @@
 // Last verified: 2026-05-21
 //
 // Uses `FBRewardedVideoAd` as the closest semantic match for v3's
-// `VideoAd` (fullscreen video). FAN exposes no quartile callbacks; we
+// `EBVideoAd` (fullscreen video). FAN exposes no quartile callbacks; we
 // approximate `onProgress(0)` at present and `onProgress(100)` on
 // video-complete via the rewarded callback.
 
@@ -13,7 +13,7 @@ import ExelBidSDK
 #if canImport(FBAudienceNetwork)
 import FBAudienceNetwork
 
-public final class FANVideoAdapter: NSObject, VideoMediationAdapter {
+public final class FANVideoAdapter: NSObject, EBVideoMediationAdapter {
 
     public static let networkID = "fan"
     public static var isAvailable: Bool { true }
@@ -100,7 +100,7 @@ extension FANVideoAdapter: FBRewardedVideoAdDelegate {
 
 #else
 
-public final class FANVideoAdapter: NSObject, VideoMediationAdapter {
+public final class FANVideoAdapter: NSObject, EBVideoMediationAdapter {
     public static let networkID = "fan"
     public static var isAvailable: Bool { false }
 

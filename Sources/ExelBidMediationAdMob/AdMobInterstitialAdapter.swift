@@ -9,7 +9,7 @@ import GoogleMobileAds
 /// Mediation adapter for Google AdMob fullscreen interstitials
 /// (`InterstitialAd`). Bridges AdMob's `FullScreenContentDelegate` to
 /// the closure callbacks the orchestrator expects.
-public final class AdMobInterstitialAdapter: NSObject, InterstitialMediationAdapter {
+public final class AdMobInterstitialAdapter: NSObject, EBInterstitialMediationAdapter {
 
     public static let networkID = "admob"
     public static var isAvailable: Bool { true }

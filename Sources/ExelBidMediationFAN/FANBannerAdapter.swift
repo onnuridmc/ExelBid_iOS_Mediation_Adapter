@@ -22,7 +22,7 @@ import FBAudienceNetwork
 /// FAN requires a `rootViewController` at init time. If the orchestrator
 /// can't supply one (no window yet), the adapter throws — FAN will not
 /// render without a view controller to host click flow.
-public final class FANBannerAdapter: NSObject, BannerMediationAdapter {
+public final class FANBannerAdapter: NSObject, EBBannerMediationAdapter {
 
     public static let networkID = "fan"
     public static var isAvailable: Bool { true }
@@ -130,7 +130,7 @@ extension FANBannerAdapter: FBAdViewDelegate {
 // FAN SDK not linked. Provide a placeholder so the module compiles;
 // `isAvailable` returns false so the orchestrator treats the adapter
 // as unregistered.
-public final class FANBannerAdapter: NSObject, BannerMediationAdapter {
+public final class FANBannerAdapter: NSObject, EBBannerMediationAdapter {
 
     public static let networkID = "fan"
     public static var isAvailable: Bool { false }

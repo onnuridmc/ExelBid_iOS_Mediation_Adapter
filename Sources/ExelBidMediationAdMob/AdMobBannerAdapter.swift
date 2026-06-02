@@ -13,12 +13,12 @@ import GoogleMobileAds
 /// Mediation adapter for Google AdMob banners.
 ///
 /// Bridge layer:
-/// - Translates `BannerMediationAdapter.load(...)` → `BannerView` + delegate.
+/// - Translates `EBBannerMediationAdapter.load(...)` → `BannerView` + delegate.
 /// - Maps AdMob delegate callbacks (`bannerViewDidReceiveAd`,
 ///   `bannerView(_:didFailToReceiveAdWithError:)`,
 ///   `bannerViewDidRecordClick`, `bannerViewWillLeaveApplication`)
 ///   to the closure callbacks the orchestrator expects.
-public final class AdMobBannerAdapter: NSObject, BannerMediationAdapter {
+public final class AdMobBannerAdapter: NSObject, EBBannerMediationAdapter {
 
     public static let networkID = "admob"
     public static var isAvailable: Bool { true }

@@ -15,7 +15,7 @@ import ExelBidSDK
 #if canImport(AdFitSDK)
 import AdFitSDK
 
-public final class AdFitBannerAdapter: NSObject, BannerMediationAdapter {
+public final class AdFitBannerAdapter: NSObject, EBBannerMediationAdapter {
 
     public static let networkID = "adfit"
     public static var isAvailable: Bool { true }
@@ -106,7 +106,7 @@ extension AdFitBannerAdapter: AdFitBannerAdViewDelegate {
 // AdFit SDK not linked. Provide a placeholder so the module compiles;
 // `isAvailable` returns false so the orchestrator treats the adapter
 // as unregistered.
-public final class AdFitBannerAdapter: NSObject, BannerMediationAdapter {
+public final class AdFitBannerAdapter: NSObject, EBBannerMediationAdapter {
 
     public static let networkID = "adfit"
     public static var isAvailable: Bool { false }

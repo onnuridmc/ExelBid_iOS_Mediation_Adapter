@@ -12,7 +12,7 @@ import ExelBidSDK
 #if canImport(FBAudienceNetwork)
 import FBAudienceNetwork
 
-public final class FANInterstitialAdapter: NSObject, InterstitialMediationAdapter {
+public final class FANInterstitialAdapter: NSObject, EBInterstitialMediationAdapter {
 
     public static let networkID = "fan"
     public static var isAvailable: Bool { true }
@@ -98,7 +98,7 @@ extension FANInterstitialAdapter: FBInterstitialAdDelegate {
 
 #else
 
-public final class FANInterstitialAdapter: NSObject, InterstitialMediationAdapter {
+public final class FANInterstitialAdapter: NSObject, EBInterstitialMediationAdapter {
     public static let networkID = "fan"
     public static var isAvailable: Bool { false }
 
