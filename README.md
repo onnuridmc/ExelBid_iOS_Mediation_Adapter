@@ -103,7 +103,7 @@ CocoaPods, Carthage, 또는 수동 binary target으로 링크해야 합니다. �
 // Package.swift
 dependencies: [
     .package(url: "https://github.com/exelbid/exelbid-ios-sdk-v3.git",
-             from: "3.1.0"),
+             from: "3.0.0"),
     .package(url: "https://github.com/exelbid/exelbid-ios-sdk-mediation.git",
              from: "1.0.0"),
 ],
@@ -126,16 +126,18 @@ SwiftPM에서는 각 어댑터가 별도 모듈이므로 사용하는 어댑터�
 
 ```ruby
 # Podfile
-pod 'ExelBidMediation/AdMob'
-pod 'ExelBidMediation/FAN'
+pod 'ExelBid_Mediation_Adapter/AdMob'
+pod 'ExelBid_Mediation_Adapter/FAN'
 # …실제로 사용하는 subspec만
 ```
 
-CocoaPods에서는 모든 subspec이 `ExelBidMediation`이라는 **하나의 모듈로**
-컴파일됩니다. 따라서 어떤 subspec을 설치하든 `import ExelBidMediation`
-하나만 추가하면 되고, 링크된 어댑터(위 예시에서는 AdMob/FAN)만 사용
-가능합니다. 각 네트워크 SDK 자체(`Google-Mobile-Ads-SDK`,
-`FBAudienceNetwork`, `AdFitSDK`)는 subspec 의존성으로 함께 설치됩니다.
+CocoaPods에서는 모든 subspec이 `ExelBidMediationAdapter`라는 **하나의
+모듈로** 컴파일됩니다(pod 배포명은 `ExelBid_Mediation_Adapter`이지만
+`s.module_name`으로 import명을 분리). 따라서 어떤 subspec을 설치하든
+`import ExelBidMediationAdapter` 하나만 추가하면 되고, 링크된 어댑터(위
+예시에서는 AdMob/FAN)만 사용 가능합니다. 각 네트워크 SDK
+자체(`Google-Mobile-Ads-SDK`, `FBAudienceNetwork`, `AdFitSDK`)는 subspec
+의존성으로 함께 설치됩니다.
 
 ### 앱 시작 시 모듈 등록
 
@@ -144,7 +146,7 @@ CocoaPods에서는 모든 subspec이 `ExelBidMediation`이라는 **하나의 모
 import ExelBidSDK
 import ExelBidMediationAdMob   // SwiftPM: 어댑터별 import
 import ExelBidMediationFAN
-// CocoaPods로 설치한 경우: import ExelBidMediation 하나만
+// CocoaPods로 설치한 경우: import ExelBidMediationAdapter 하나만
 
 func application(_ application: UIApplication,
                  didFinishLaunchingWithOptions …) -> Bool {

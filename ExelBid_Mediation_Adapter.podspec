@@ -1,12 +1,15 @@
 Pod::Spec.new do |s|
-  s.name             = 'ExelBidMediation'
+  s.name             = 'ExelBid_Mediation_Adapter'
+  # Source pod: the Swift import name defaults to `s.name`. Override it so
+  # hosts `import ExelBidMediationAdapter` regardless of the pod name.
+  s.module_name      = 'ExelBidMediationAdapter'
   s.version          = '1.0.0'
   s.summary          = 'Third-party network adapters for ExelBid iOS SDK v3 mediation.'
   s.description      = <<-DESC
     Thin bridge adapters between each ad network's iOS SDK and the ExelBid
     mediation contract. Each network is exposed as a CocoaPods subspec so
     host apps integrate only the networks they actually use, e.g.
-    `pod 'ExelBidMediation/AdMob'`. The mediation core (orchestrator,
+    `pod 'ExelBid_Mediation_Adapter/AdMob'`. The mediation core (orchestrator,
     protocols, registry) ships with the `ExelBid_iOS_Swift` pod.
   DESC
   s.homepage         = 'https://github.com/onnuridmc/ExelBid_iOS_Mediation_Adapter'
@@ -27,8 +30,9 @@ Pod::Spec.new do |s|
   # Match the SwiftPM `from: "3.0.0"` constraint (>= 3.0.0, < 4.0.0).
   s.dependency 'ExelBid_iOS_Swift', '~> 3.0'
 
-  # No default_subspec on purpose: integrating bare `pod 'ExelBidMediation'`
-  # would pull every network SDK. Hosts must pick subspecs explicitly.
+  # No default_subspec on purpose: integrating bare
+  # `pod 'ExelBid_Mediation_Adapter'` would pull every network SDK.
+  # Hosts must pick subspecs explicitly.
 
   # --- AdMob (Google Mobile Ads) — all 4 formats, SDK on CocoaPods --------
   s.subspec 'AdMob' do |sp|
