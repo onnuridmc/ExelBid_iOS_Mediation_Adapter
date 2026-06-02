@@ -23,12 +23,15 @@ let package = Package(
                  targets: ["ExelBidMediationAdFit"]),
     ],
     dependencies: [
-        // ExelBid iOS SDK — pinned to the 3.x major
-        // (>= 3.0.0, < 4.0.0). For local development against the sibling
-        // checkout, swap this line for
-        // `.package(name: "ExelBidSDK", path: "../exelbid-ios-sdk-v3")`.
+        // ExelBid iOS SDK — pinned to the 3.0.0-beta.1 prerelease tag
+        // (tagged on the `release/3.x-beta` branch). A git tag is not
+        // branch-scoped, so `exact:` on the tag is enough; range
+        // constraints like `from:` would NOT pick up prerelease tags.
+        // Switch back to `.upToNextMajor(from: "3.0.0")` once 3.x ships
+        // stable. For local development against the sibling checkout,
+        // swap for `.package(name: "ExelBidSDK", path: "../exelbid-ios-sdk-v3")`.
         .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Swift",
-                 .upToNextMajor(from: "3.0.0")),
+                 exact: "3.0.0-beta.1"),
 
         // Per-network SDKs. Versions are *minimum* — adapters should
         // remain source-compatible with the listed major version range.
@@ -51,7 +54,7 @@ let package = Package(
         .target(
             name: "ExelBidMediationAdMob",
             dependencies: [
-                .product(name: "ExelBidSDK", package: "ExelBidSDK"),
+                .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift"),
                 .product(name: "GoogleMobileAds",
                          package: "swift-package-manager-google-mobile-ads")
             ],
@@ -60,7 +63,7 @@ let package = Package(
         .target(
             name: "ExelBidMediationFAN",
             dependencies: [
-                .product(name: "ExelBidSDK", package: "ExelBidSDK")
+                .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift")
                 // FBAudienceNetwork: host links it via CocoaPods /
                 // Carthage / binary target. Adapter is guarded with
                 // `#if canImport(FBAudienceNetwork)`.
@@ -70,7 +73,7 @@ let package = Package(
         .target(
             name: "ExelBidMediationAdFit",
             dependencies: [
-                .product(name: "ExelBidSDK", package: "ExelBidSDK")
+                .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift")
                 // AdFitSDK: host links it via CocoaPods / manual
                 // binary target. Adapter is guarded with
                 // `#if canImport(AdFitSDK)`.
@@ -87,7 +90,7 @@ let package = Package(
                 "ExelBidMediationAdMob",
                 "ExelBidMediationFAN",
                 "ExelBidMediationAdFit",
-                .product(name: "ExelBidSDK", package: "ExelBidSDK")
+                .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift")
             ],
             path: "Tests/ExelBidMediationAdaptersTests"
         )
