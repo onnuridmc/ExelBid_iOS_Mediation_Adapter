@@ -1,5 +1,4 @@
 // Compatible with: Facebook Audience Network 16.x
-// Last verified: 2026-05-21
 
 import Foundation
 import UIKit

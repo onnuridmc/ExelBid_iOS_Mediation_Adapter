@@ -1,5 +1,4 @@
 // Compatible with: Kakao AdFit SDK 3.x
-// Last verified: 2026-05-21
 //
 // AdFit is distributed via CocoaPods only — see AdFitBannerAdapter.swift
 // for the SDK linking pattern.

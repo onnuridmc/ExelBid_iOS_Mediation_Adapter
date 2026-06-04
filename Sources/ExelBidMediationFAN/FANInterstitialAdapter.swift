@@ -1,5 +1,4 @@
 // Compatible with: Facebook Audience Network 16.x
-// Last verified: 2026-05-21
 //
 // NOTE: FAN is distributed via CocoaPods only — see FANBannerAdapter.swift
 // for the SDK linking pattern. Adapter compiles as a placeholder when

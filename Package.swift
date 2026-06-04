@@ -1,20 +1,16 @@
 // swift-tools-version: 5.9
 import PackageDescription
 
-// Third-party adapter modules for ExelBidMediation. Each adapter is its
-// own SwiftPM product so host apps link only the adapter SDKs they use.
-//
-// The mediation core (orchestrator, protocols, registry) lives in the
-// `exelbid-ios-sdk-v3` repo and is consumed via the `ExelBidMediation`
-// product. During local development we depend on it by relative path.
-// Release builds will switch to a versioned package URL.
+// Third-party adapter modules for the ExelBid iOS SDK mediation. Each
+// adapter is its own SwiftPM product so host apps link only the adapter
+// SDKs they use. The mediation core (orchestrator, protocols, registry)
+// ships with the `ExelBidSDK` product.
 let package = Package(
     name: "ExelBidMediationAdapters",
     platforms: [
         .iOS(.v13)
     ],
     products: [
-        // Tier 1 — operationally mandatory for KR market.
         .library(name: "ExelBidMediationAdMob",
                  targets: ["ExelBidMediationAdMob"]),
         .library(name: "ExelBidMediationFAN",
@@ -23,20 +19,11 @@ let package = Package(
                  targets: ["ExelBidMediationAdFit"]),
     ],
     dependencies: [
-        // ExelBid iOS SDK — pinned to the 3.0.0-beta.1 prerelease tag
-        // (tagged on the `release/3.x-beta` branch). A git tag is not
-        // branch-scoped, so `exact:` on the tag is enough; range
-        // constraints like `from:` would NOT pick up prerelease tags.
-        // Switch back to `.upToNextMajor(from: "3.0.0")` once 3.x ships
-        // stable. For local development against the sibling checkout,
-        // swap for `.package(name: "ExelBidSDK", path: "../exelbid-ios-sdk-v3")`.
+        // ExelBid iOS SDK — provides the mediation core every adapter builds on.
         .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Swift",
-                 exact: "3.0.0-beta.1"),
+                 from: "3.0.0"),
 
-        // Per-network SDKs. Versions are *minimum* — adapters should
-        // remain source-compatible with the listed major version range.
-        // Update when a third-party SDK introduces breaking changes
-        // (see top-of-file comment in each adapter).
+        // Per-network SDKs. The listed version is the minimum supported major.
         .package(
             url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
             from: "12.0.0"
@@ -81,9 +68,7 @@ let package = Package(
             path: "Sources/ExelBidMediationAdFit"
         ),
 
-        // Tests live with each adapter when there's something
-        // meaningful to test in isolation. For now we keep a single
-        // light smoke-test target.
+        // Smoke-test target covering adapter registration.
         .testTarget(
             name: "ExelBidMediationAdaptersTests",
             dependencies: [

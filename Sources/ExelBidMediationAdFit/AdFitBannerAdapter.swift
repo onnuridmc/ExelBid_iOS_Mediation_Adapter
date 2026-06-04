@@ -1,5 +1,4 @@
 // Compatible with: Kakao AdFit SDK 3.x
-// Last verified: 2026-05-20
 //
 // NOTE: AdFit is distributed via CocoaPods. To enable this adapter in a
 // SwiftPM-only host, add a binary target for AdFitSDK in the host's

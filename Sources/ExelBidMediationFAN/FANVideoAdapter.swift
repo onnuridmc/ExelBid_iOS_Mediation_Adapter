@@ -1,5 +1,4 @@
 // Compatible with: Facebook Audience Network 16.x
-// Last verified: 2026-06-04
 //
 // For non-ExelBid networks, v3's mediation "video" format means a
 // FULLSCREEN INTERSTITIAL VIDEO (전면 비디오) — NOT a rewarded ad. So this

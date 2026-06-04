@@ -1,5 +1,4 @@
 // Compatible with: Google Mobile Ads SDK 12.x
-// Last verified: 2026-06-04
 
 import Foundation
 import UIKit

@@ -1,5 +1,4 @@
 // Compatible with: Kakao AdFit SDK 3.x
-// Last verified: 2026-05-21
 
 import Foundation
 import UIKit

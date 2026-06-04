@@ -1,9 +1,4 @@
 // Compatible with: Google Mobile Ads SDK 11.x / 12.x
-// Last verified: 2026-05-20
-//
-// When Google ships a breaking change (typical: class renames such as
-// `GADBannerView` → `BannerView` in v12), update this file and bump the
-// adapter's minor version.
 
 import Foundation
 import UIKit

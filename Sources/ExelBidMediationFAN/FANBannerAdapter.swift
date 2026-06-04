@@ -1,5 +1,4 @@
 // Compatible with: Facebook Audience Network 16.x
-// Last verified: 2026-05-20
 //
 // NOTE: FAN is distributed via CocoaPods only — Meta's `facebook-ios-sdk`
 // SwiftPM package does NOT include the Audience Network module. To
