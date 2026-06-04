@@ -33,6 +33,8 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
     private var loader: AdLoader?
     private var nativeAd: GoogleMobileAds.NativeAd?
     private var nativeAdView: NativeAdView?
+    private var mediaView: MediaView?
+    private var hiddenMainImageView: UIImageView?
     private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
@@ -91,27 +93,48 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
                 wrapper.storeView        = r.nativeDisplayURLTextLabel?() ?? nil
                 wrapper.iconView         = r.nativeIconImageView?() ?? nil
 
+                // AdMob mandates that the main image / video asset render
+                // through a `MediaView` — the `imageView` outlet is rejected
+                // ("MediaView not used for main image or video asset") and
+                // can't show video. So we always host a MediaView, never set
+                // `imageView`.
+                //
+                // Prefer the host's dedicated media slot. If the host only
+                // exposes a `nativeMainImageView()`, overlay a MediaView at
+                // that image view's position and hide the image view (the
+                // SDK-loaded URL image would otherwise compete with / sit
+                // behind AdMob's media).
                 if let slot = r.nativeMediaView?() ?? nil {
-                    // Network-owned media: host a `MediaView` in the host's
-                    // media slot and let AdMob render the creative there
-                    // (supports video). The SDK skipped the static main image
-                    // because this slot is present.
-                    let mediaView = MediaView()
-                    mediaView.translatesAutoresizingMaskIntoConstraints = false
-                    slot.addSubview(mediaView)
+                    let media = MediaView()
+                    media.translatesAutoresizingMaskIntoConstraints = false
+                    slot.addSubview(media)
                     NSLayoutConstraint.activate([
-                        mediaView.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
-                        mediaView.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
-                        mediaView.topAnchor.constraint(equalTo: slot.topAnchor),
-                        mediaView.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
+                        media.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
+                        media.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
+                        media.topAnchor.constraint(equalTo: slot.topAnchor),
+                        media.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
                     ])
-                    mediaView.mediaContent = nativeAd.mediaContent
-                    wrapper.mediaView = mediaView
-                } else {
-                    // No media slot — register the SDK-rendered static main
-                    // image (URL-loaded by `StaticNativeRenderer`) instead.
-                    wrapper.imageView = r.nativeMainImageView?() ?? nil
+                    media.mediaContent = nativeAd.mediaContent
+                    wrapper.mediaView = media
+                    self.mediaView = media
+                } else if let img = r.nativeMainImageView?() ?? nil,
+                          let parent = img.superview {
+                    let media = MediaView()
+                    media.translatesAutoresizingMaskIntoConstraints = false
+                    parent.addSubview(media)
+                    NSLayoutConstraint.activate([
+                        media.leadingAnchor.constraint(equalTo: img.leadingAnchor),
+                        media.trailingAnchor.constraint(equalTo: img.trailingAnchor),
+                        media.topAnchor.constraint(equalTo: img.topAnchor),
+                        media.bottomAnchor.constraint(equalTo: img.bottomAnchor),
+                    ])
+                    img.isHidden = true
+                    self.hiddenMainImageView = img
+                    media.mediaContent = nativeAd.mediaContent
+                    wrapper.mediaView = media
+                    self.mediaView = media
                 }
+                // else: text/icon-only layout — no main media asset to show.
             }
             // AdChoices is rendered automatically into a corner of the
             // `NativeAdView`, so no `nativeAdChoicesView()` slot is needed.
@@ -126,6 +149,12 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
 
     public func unbind() {
         Task { @MainActor in
+            self.mediaView?.removeFromSuperview()
+            self.mediaView = nil
+            // Restore the host's main image view we hid to make room for the
+            // overlaid MediaView, in case the host view is reused.
+            self.hiddenMainImageView?.isHidden = false
+            self.hiddenMainImageView = nil
             self.nativeAdView?.removeFromSuperview()
             self.nativeAdView = nil
         }
