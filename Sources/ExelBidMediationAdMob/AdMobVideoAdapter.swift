@@ -1,12 +1,13 @@
 // Compatible with: Google Mobile Ads SDK 12.x
-// Last verified: 2026-05-21
+// Last verified: 2026-06-04
 //
-// AdMob's fullscreen video offerings are RewardedAd (incentivised) and
-// RewardedInterstitialAd. This adapter uses `RewardedAd` since v3's
-// `EBVideoAd` is the closest semantic match (fullscreen video with
-// VAST-style progress) and ExelBid does not currently differentiate
-// reward grants from the SDK surface. If you need true rewarded-grant
-// signaling, register a custom adapter (see USAGE_GUIDE §7).
+// For non-ExelBid networks, v3's mediation "video" format means a
+// FULLSCREEN INTERSTITIAL VIDEO (전면 비디오) — NOT a rewarded ad. This
+// adapter is the video-format twin of `AdMobInterstitialAdapter`: both wrap
+// the shared `AdMobFullScreenAd` (`InterstitialAd`), which serves either a
+// display or video creative through the same fullscreen surface. AdMob
+// exposes no quartile callbacks, so `onProgress` is approximated — 0 at
+// present, 100 on dismissal (treated as end-of-playback).
 
 import Foundation
 import UIKit
@@ -26,54 +27,38 @@ public final class AdMobVideoAdapter: NSObject, EBVideoMediationAdapter {
     public var onLeaveApp: (() -> Void)?
     public var onProgress: ((Int) -> Void)?
 
-    private var rewarded: RewardedAd?
+    private let ad = AdMobFullScreenAd()
 
-    public override init() { super.init() }
+    public override init() {
+        super.init()
+        ad.onWillAppear    = { [weak self] in self?.onWillAppear?() }
+        ad.onDidAppear     = { [weak self] in self?.onDidAppear?() }
+        ad.onWillDisappear = { [weak self] in self?.onWillDisappear?() }
+        ad.onDidDisappear  = { [weak self] in
+            // No quartile / complete callback for fullscreen ads; treat
+            // dismissal as end-of-playback. (A display creative reports 100
+            // on dismiss too, which the host's quartile aggregation tolerates.)
+            self?.onProgress?(100)
+            self?.onDidDisappear?()
+        }
+        ad.onClick         = { [weak self] in self?.onClick?(); self?.onLeaveApp?() }
+    }
 
     public func load(
         unitId: String,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws {
-        let ad = try await RewardedAd.load(with: unitId, request: Request())
-        await MainActor.run {
-            ad.fullScreenContentDelegate = self
-            self.rewarded = ad
-        }
+        try await ad.load(unitId: unitId)
     }
 
     @MainActor
     public func present(from viewController: UIViewController) {
-        guard let ad = rewarded else { return }
-        // AdMob does not expose quartile callbacks for RewardedAd; fire
-        // start/complete approximations from the lifecycle hooks below.
-        ad.present(from: viewController) { [weak self] in
-            // Reward earned == playback completion in our semantics.
-            self?.onProgress?(100)
-        }
+        ad.present(from: viewController)
         onProgress?(0)
     }
 
     public func cancel() {
-        rewarded = nil
-    }
-}
-
-extension AdMobVideoAdapter: FullScreenContentDelegate {
-    public func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
-        onWillAppear?()
-    }
-    public func adDidRecordImpression(_ ad: FullScreenPresentingAd) {
-        onDidAppear?()
-    }
-    public func adWillDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        onWillDisappear?()
-    }
-    public func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        onDidDisappear?()
-    }
-    public func adDidRecordClick(_ ad: FullScreenPresentingAd) {
-        onClick?()
-        onLeaveApp?()
+        ad.cancel()
     }
 }

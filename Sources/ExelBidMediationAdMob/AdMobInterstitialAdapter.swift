@@ -1,14 +1,17 @@
 // Compatible with: Google Mobile Ads SDK 12.x
-// Last verified: 2026-05-21
+// Last verified: 2026-06-04
 
 import Foundation
 import UIKit
 import ExelBidSDK
 import GoogleMobileAds
 
-/// Mediation adapter for Google AdMob fullscreen interstitials
-/// (`InterstitialAd`). Bridges AdMob's `FullScreenContentDelegate` to
-/// the closure callbacks the orchestrator expects.
+/// Mediation adapter for Google AdMob fullscreen interstitials.
+///
+/// A fullscreen slot can serve a display (image / banner) or video
+/// creative; both are driven by the shared `AdMobFullScreenAd`
+/// (`InterstitialAd`). This adapter adds only the interstitial-format
+/// callback surface — see `AdMobVideoAdapter` for the video-format twin.
 public final class AdMobInterstitialAdapter: NSObject, EBInterstitialMediationAdapter {
 
     public static let networkID = "admob"
@@ -22,49 +25,33 @@ public final class AdMobInterstitialAdapter: NSObject, EBInterstitialMediationAd
     public var onLeaveApp: (() -> Void)?
     public var onClickFinish: (() -> Void)?
 
-    private var interstitial: GoogleMobileAds.InterstitialAd?
+    private let ad = AdMobFullScreenAd()
 
-    public override init() { super.init() }
+    public override init() {
+        super.init()
+        ad.onWillAppear    = { [weak self] in self?.onWillAppear?() }
+        ad.onDidAppear     = { [weak self] in self?.onDidAppear?() }
+        ad.onWillDisappear = { [weak self] in self?.onWillDisappear?() }
+        ad.onDidDisappear  = { [weak self] in self?.onDidDisappear?() }
+        // AdMob does not distinguish click from leave-app; fire both so the
+        // host can decide based on its own UI flow.
+        ad.onClick         = { [weak self] in self?.onClick?(); self?.onLeaveApp?() }
+    }
 
     public func load(
         unitId: String,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws {
-        let ad = try await GoogleMobileAds.InterstitialAd.load(with: unitId, request: Request())
-        await MainActor.run {
-            ad.fullScreenContentDelegate = self
-            self.interstitial = ad
-        }
+        try await ad.load(unitId: unitId)
     }
 
     @MainActor
     public func present(from viewController: UIViewController) {
-        interstitial?.present(from: viewController)
+        ad.present(from: viewController)
     }
 
     public func cancel() {
-        interstitial = nil
-    }
-}
-
-extension AdMobInterstitialAdapter: FullScreenContentDelegate {
-    public func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
-        onWillAppear?()
-    }
-    public func adDidRecordImpression(_ ad: FullScreenPresentingAd) {
-        onDidAppear?()
-    }
-    public func adWillDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        onWillDisappear?()
-    }
-    public func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        onDidDisappear?()
-    }
-    public func adDidRecordClick(_ ad: FullScreenPresentingAd) {
-        onClick?()
-        // AdMob does not distinguish click from leave-app; fire both so
-        // the host can decide based on its own UI flow.
-        onLeaveApp?()
+        ad.cancel()
     }
 }

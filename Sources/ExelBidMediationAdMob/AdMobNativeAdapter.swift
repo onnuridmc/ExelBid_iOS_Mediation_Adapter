@@ -139,6 +139,16 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
             // AdChoices is rendered automatically into a corner of the
             // `NativeAdView`, so no `nativeAdChoicesView()` slot is needed.
 
+            // Resolve Auto Layout before AdMob validates asset boundaries.
+            // The host view is pinned to fill the wrapper and its asset
+            // subviews are constraint-driven, so until a layout pass runs they
+            // still sit at their pre-layout (zero) frames. AdMob measures at
+            // `nativeAd` assignment time, so without this flush it sees assets
+            // outside the NativeAdView ("Advertiser assets outside native ad
+            // view"). Lay out from the top so the wrapper's own (inherited)
+            // constraints resolve too.
+            (wrapper.superview ?? wrapper).layoutIfNeeded()
+
             // Assign `nativeAd` last, per AdMob's documented order, so the
             // registered outlets are all in place before instrumentation
             // attaches.

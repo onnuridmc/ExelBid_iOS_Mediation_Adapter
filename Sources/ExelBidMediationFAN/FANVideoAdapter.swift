@@ -1,10 +1,12 @@
 // Compatible with: Facebook Audience Network 16.x
-// Last verified: 2026-05-21
+// Last verified: 2026-06-04
 //
-// Uses `FBRewardedVideoAd` as the closest semantic match for v3's
-// `EBVideoAd` (fullscreen video). FAN exposes no quartile callbacks; we
-// approximate `onProgress(0)` at present and `onProgress(100)` on
-// video-complete via the rewarded callback.
+// For non-ExelBid networks, v3's mediation "video" format means a
+// FULLSCREEN INTERSTITIAL VIDEO (전면 비디오) — NOT a rewarded ad. So this
+// adapter wraps FAN's `FBInterstitialAd` (a video placement serves its
+// video creative through the fullscreen interstitial surface). FAN exposes
+// no quartile callbacks for interstitials, so `onProgress` is approximated —
+// 0 at present, 100 on close (treated as end-of-playback).
 
 import Foundation
 import UIKit
@@ -26,7 +28,7 @@ public final class FANVideoAdapter: NSObject, EBVideoMediationAdapter {
     public var onLeaveApp: (() -> Void)?
     public var onProgress: ((Int) -> Void)?
 
-    private var rewarded: FBRewardedVideoAd?
+    private var interstitial: FBInterstitialAd?
     private var continuation: CheckedContinuation<Void, Error>?
     private var resumed = false
 
@@ -41,23 +43,23 @@ public final class FANVideoAdapter: NSObject, EBVideoMediationAdapter {
             self.continuation = cont
             self.resumed = false
             DispatchQueue.main.async {
-                let ad = FBRewardedVideoAd(placementID: unitId)
+                let ad = FBInterstitialAd(placementID: unitId)
                 ad.delegate = self
                 ad.load()
-                self.rewarded = ad
+                self.interstitial = ad
             }
         }
     }
 
     @MainActor
     public func present(from viewController: UIViewController) {
-        rewarded?.show(fromRootViewController: viewController)
+        interstitial?.show(fromRootViewController: viewController)
         onProgress?(0)
     }
 
     public func cancel() {
-        rewarded?.delegate = nil
-        rewarded = nil
+        interstitial?.delegate = nil
+        interstitial = nil
         resume(throwing: CancellationError())
     }
 
@@ -73,26 +75,29 @@ public final class FANVideoAdapter: NSObject, EBVideoMediationAdapter {
     }
 }
 
-extension FANVideoAdapter: FBRewardedVideoAdDelegate {
-    public func rewardedVideoAdDidLoad(_ rewardedVideoAd: FBRewardedVideoAd) {
+extension FANVideoAdapter: FBInterstitialAdDelegate {
+    public func interstitialAdDidLoad(_ interstitialAd: FBInterstitialAd) {
         resume(returningSuccess: ())
     }
-    public func rewardedVideoAd(_ rewardedVideoAd: FBRewardedVideoAd, didFailWithError error: Error) {
+    public func interstitialAd(_ interstitialAd: FBInterstitialAd, didFailWithError error: Error) {
         resume(throwing: error)
     }
-    public func rewardedVideoAdWillLogImpression(_ rewardedVideoAd: FBRewardedVideoAd) {
+    public func interstitialAdWillDisplay(_ interstitialAd: FBInterstitialAd) {
         onWillAppear?()
     }
-    public func rewardedVideoAdVideoComplete(_ rewardedVideoAd: FBRewardedVideoAd) {
-        onProgress?(100)
+    public func interstitialAdDidLogImpression(_ interstitialAd: FBInterstitialAd) {
+        onDidAppear?()
     }
-    public func rewardedVideoAdWillClose(_ rewardedVideoAd: FBRewardedVideoAd) {
+    public func interstitialAdWillClose(_ interstitialAd: FBInterstitialAd) {
         onWillDisappear?()
     }
-    public func rewardedVideoAdDidClose(_ rewardedVideoAd: FBRewardedVideoAd) {
+    public func interstitialAdDidClose(_ interstitialAd: FBInterstitialAd) {
+        // FAN exposes no quartile / complete callback for interstitials;
+        // treat close as end-of-playback.
+        onProgress?(100)
         onDidDisappear?()
     }
-    public func rewardedVideoAdDidClick(_ rewardedVideoAd: FBRewardedVideoAd) {
+    public func interstitialAdDidClick(_ interstitialAd: FBInterstitialAd) {
         onClick?()
         onLeaveApp?()
     }

@@ -14,8 +14,8 @@
 
 | 모듈 | 네트워크 | Banner | Interstitial | Native | Video | 기반 SDK | 최소 iOS | 배포 방식 |
 |---|---|:-:|:-:|:-:|:-:|---|---|---|
-| `ExelBidMediationAdMob` | Google AdMob | ✅ | ✅ | ✅ | ✅ (Rewarded) | `GoogleMobileAds` 12.x | 14 | SwiftPM |
-| `ExelBidMediationFAN` | Facebook Audience Network | ✅ | ✅ | ✅ | ✅ (Rewarded) | `FBAudienceNetwork` 6.x+ | 14 | CocoaPods (호스트 링크) |
+| `ExelBidMediationAdMob` | Google AdMob | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `GoogleMobileAds` 12.x | 14 | SwiftPM |
+| `ExelBidMediationFAN` | Facebook Audience Network | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `FBAudienceNetwork` 6.x+ | 14 | CocoaPods (호스트 링크) |
 | `ExelBidMediationAdFit` | Kakao AdFit | ✅ | ✅ | ✅ | — | `AdFitSDK` 3.x | 13 | CocoaPods (호스트 링크) |
 | `ExelBidMediationPangle` | ByteDance Pangle | 🟡 placeholder | TBD | TBD | TBD | `PAGAdSDK` 5.x | 12 | CocoaPods (호스트 링크) |
 | `ExelBidMediationAppLovin` | AppLovin (SDK direct) | 🟡 placeholder | TBD | TBD | TBD | `AppLovinSDK` 12.x+ | 12 | CocoaPods (호스트 링크) |
@@ -63,16 +63,33 @@ ExelBidMediationKit.shared.register(modules: [
 ```
 
 **비디오 어댑터 관련 참고**:
-- AdMob과 FAN은 전체화면 비디오를 **rewarded** 광고 포맷으로 노출합니다
-  (별도의 VAST interstitial-video API가 없음). 여기 비디오 어댑터들은
-  각각 `RewardedAd` / `FBRewardedVideoAd`를 래핑하며, 분위(quartile)
-  진행률은 근사 처리합니다(현재 `onProgress(0)`, 완료 시
-  `onProgress(100)`). 실제 rewarded-grant 시그널이 필요한 호스트는 자체
-  어댑터를 등록하세요 — `exelbid-ios-sdk-v3/docs/USAGE_GUIDE.md` §7 참고.
+- ExelBid 외 네트워크에서 미디에이션 **video 포맷은 전면(인터스티셜)
+  비디오**를 의미합니다(보상형 아님). AdMob·FAN 비디오 어댑터는 각각
+  `InterstitialAd` / `FBInterstitialAd`를 래핑하며, 비디오용 광고 유닛이
+  영상 크리에이티브를 전면으로 자동 재생합니다. 분위(quartile) 진행률은
+  근사 처리합니다(`onProgress(0)` 표시 시작, `onProgress(100)` 종료 시).
+  보상형(rewarded) 광고가 필요한 호스트는 자체 어댑터를 등록하세요 —
+  `exelbid-ios-sdk-v3/docs/USAGE_GUIDE.md` §7 참고.
 - AdFit SDK는 전체화면 비디오 포맷을 제공하지 않으므로
   `AdFitMediationModule`은 비디오 어댑터를 의도적으로 등록하지 않습니다.
   서버 비디오 워터폴의 `"adfit"` 항목은
   `EBWaterfallEvent.lost(.adapterNotRegistered)`로 건너뛰어집니다.
+
+**네이티브 어댑터 관련 참고**:
+- AdMob과 FAN은 메인 이미지·동영상 에셋을 각 네트워크의 **미디어 뷰**로
+  직접 렌더링합니다(이미지 URL로 표현되지 않음). 미디에이션 네이티브에서
+  이 미디어(특히 동영상)를 표시하려면, 호스트의 `EBNativeAdRendering`
+  뷰에 **빈 컨테이너 슬롯**을 노출하세요:
+
+  ```swift
+  func nativeMediaView() -> UIView? { mediaContainer }         // 메인 이미지/동영상 자리
+  func nativeAdChoicesView() -> UIView? { adChoicesContainer } // FAN AdChoices 자리(선택)
+  ```
+
+  두 메서드 모두 선택(`@objc optional`)이며, 슬롯을 제공하지 않아도 정적
+  이미지 네이티브는 정상 동작합니다(동영상은 미표시). 호스트 통합
+  예시는 `exelbid-ios-sdk-v3/docs/README.md`의 네이티브 섹션을 참고하세요.
+- AdFit은 이미지 URL 기반이라 별도 미디어 슬롯이 필요 없습니다.
 
 ExelBid 자체 어댑터는 여기에 없습니다 — 서드파티 의존성이 전혀 없는
 `ExelBidBuiltInMediationModule`로 메인 SDK에 함께 제공됩니다.
@@ -207,6 +224,15 @@ xcodebuild -scheme ExelBidMediationAdMob \
 
 표준 예시는 `Sources/ExelBidMediationAdMob/AdMobBannerAdapter.swift`를
 참고하세요.
+
+> **전면/비디오 공유 패턴**: AdMob의 전면 슬롯은 디스플레이(배너/이미지)·
+> 비디오 크리에이티브를 같은 `InterstitialAd` 객체로 재생합니다(SDK
+> 레벨에서 "비디오만" 요청 불가 — 광고 유닛 설정이 결정). 그래서
+> `AdMobInterstitialAdapter`와 `AdMobVideoAdapter`는 공유 드라이버
+> `AdMobFullScreenAd`(load/present + delegate 브리징)를 함께 쓰고, 각
+> 어댑터는 포맷별 콜백(`onClickFinish` / `onProgress`)만 연결합니다. 같은
+> 풀스크린 SDK를 전면·비디오 두 포맷에 쓰는 네트워크라면 이 구조를
+> 참고하세요.
 
 ## 버전 관리
 
