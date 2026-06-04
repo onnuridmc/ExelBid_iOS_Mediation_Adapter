@@ -169,7 +169,7 @@ func application(_ application: UIApplication,
 import ExelBidSDK
 
 let banner = EBMediatedBannerAd(
-    adUnitId: "08377f76c8b3e46c4ed36c82e434da2b394a4dfa",
+    adUnitId: "YOUR_AD_UNIT_ID",
     size: CGSize(width: 320, height: 50)
 )
 banner.onLoad = { print("낙찰 네트워크: \(banner.winningNetwork ?? "?")") }

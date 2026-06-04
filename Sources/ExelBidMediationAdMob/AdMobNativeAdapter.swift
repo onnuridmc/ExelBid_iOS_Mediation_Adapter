@@ -65,20 +65,60 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
     public func bind(view: UIView, viewController: UIViewController?) {
         guard let nativeAd = nativeAd else { return }
         Task { @MainActor in
-            // AdMob requires its own NativeAdView superview to drive
-            // click + impression tracking. Wrap the host's rendered
-            // view in a NativeAdView and have AdMob own the
-            // instrumentation.
-            let wrapper = NativeAdView(frame: view.bounds)
-            wrapper.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            view.translatesAutoresizingMaskIntoConstraints = false
-            wrapper.addSubview(view)
-            NSLayoutConstraint.activate([
-                view.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor),
-                view.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor),
-                view.topAnchor.constraint(equalTo: wrapper.topAnchor),
-                view.bottomAnchor.constraint(equalTo: wrapper.bottomAnchor),
-            ])
+            // AdMob requires its asset views to live inside a `NativeAdView`
+            // subtree to drive click + impression tracking. Slot one into the
+            // host view's place in the hierarchy and reparent the rendered
+            // creative inside it (shared helper), so the ad stays exactly
+            // where the host positioned it. Returns false if the host view
+            // isn't on-screen yet — nothing for AdMob to wrap or track.
+            let wrapper = NativeAdView(frame: view.frame)
+            guard EBNativeAdContainerReparenter.wrap(view, in: wrapper) else {
+                return
+            }
+
+            // Map AdMob's asset outlets onto the host's rendered subviews
+            // (exposed via `EBNativeAdRendering`). AdMob only makes the views
+            // it has *registered* clickable/trackable — without at least
+            // `callToActionView` wired, taps are never reported, the ad is
+            // effectively non-clickable, and it violates AdMob's native
+            // policy. The subviews are already in `wrapper`'s subtree (they
+            // live inside `view`), which AdMob requires for registration.
+            if let r = view as? EBNativeAdRendering {
+                wrapper.headlineView     = r.nativeTitleTextLabel?() ?? nil
+                wrapper.bodyView         = r.nativeMainTextLabel?() ?? nil
+                wrapper.callToActionView = r.nativeCallToActionTextLabel?() ?? nil
+                wrapper.advertiserView   = r.nativeSponsoredTextLabel?() ?? nil
+                wrapper.storeView        = r.nativeDisplayURLTextLabel?() ?? nil
+                wrapper.iconView         = r.nativeIconImageView?() ?? nil
+
+                if let slot = r.nativeMediaView?() ?? nil {
+                    // Network-owned media: host a `MediaView` in the host's
+                    // media slot and let AdMob render the creative there
+                    // (supports video). The SDK skipped the static main image
+                    // because this slot is present.
+                    let mediaView = MediaView()
+                    mediaView.translatesAutoresizingMaskIntoConstraints = false
+                    slot.addSubview(mediaView)
+                    NSLayoutConstraint.activate([
+                        mediaView.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
+                        mediaView.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
+                        mediaView.topAnchor.constraint(equalTo: slot.topAnchor),
+                        mediaView.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
+                    ])
+                    mediaView.mediaContent = nativeAd.mediaContent
+                    wrapper.mediaView = mediaView
+                } else {
+                    // No media slot — register the SDK-rendered static main
+                    // image (URL-loaded by `StaticNativeRenderer`) instead.
+                    wrapper.imageView = r.nativeMainImageView?() ?? nil
+                }
+            }
+            // AdChoices is rendered automatically into a corner of the
+            // `NativeAdView`, so no `nativeAdChoicesView()` slot is needed.
+
+            // Assign `nativeAd` last, per AdMob's documented order, so the
+            // registered outlets are all in place before instrumentation
+            // attaches.
             wrapper.nativeAd = nativeAd
             self.nativeAdView = wrapper
         }

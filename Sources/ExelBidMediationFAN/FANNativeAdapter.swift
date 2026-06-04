@@ -31,6 +31,8 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
     public var onClickFinish: (() -> Void)?
 
     private var nativeAd: FBNativeAd?
+    private var mediaView: FBMediaView?
+    private var adOptionsView: FBAdOptionsView?
     private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
@@ -55,14 +57,76 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
     }
 
     public func bind(view: UIView, viewController: UIViewController?) {
-        guard let ad = nativeAd, let vc = viewController else { return }
+        guard let ad = nativeAd else { return }
         Task { @MainActor in
-            ad.registerView(forInteraction: view, with: vc)
+            let r = view as? EBNativeAdRendering
+
+            // FAN renders the main creative through its own `FBMediaView`
+            // (there is no addressable media URL), so it *requires* a media
+            // view to register. Prefer the host's `nativeMediaView()` slot;
+            // if absent, attach a zero-size hidden one so registration still
+            // succeeds for click/impression — the media just won't be shown.
+            let media = FBMediaView()
+            media.translatesAutoresizingMaskIntoConstraints = false
+            if let slot = r?.nativeMediaView?() ?? nil {
+                slot.addSubview(media)
+                NSLayoutConstraint.activate([
+                    media.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
+                    media.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
+                    media.topAnchor.constraint(equalTo: slot.topAnchor),
+                    media.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
+                ])
+            } else {
+                media.isHidden = true
+                view.addSubview(media)
+                NSLayoutConstraint.activate([
+                    media.topAnchor.constraint(equalTo: view.topAnchor),
+                    media.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                    media.widthAnchor.constraint(equalToConstant: 0),
+                    media.heightAnchor.constraint(equalToConstant: 0),
+                ])
+            }
+            self.mediaView = media
+
+            // FAN's AdChoices/ad-options overlay (policy-required). Rendered
+            // into the host's slot when provided.
+            if let slot = r?.nativeAdChoicesView?() ?? nil {
+                let options = FBAdOptionsView()
+                options.nativeAd = ad
+                options.translatesAutoresizingMaskIntoConstraints = false
+                slot.addSubview(options)
+                NSLayoutConstraint.activate([
+                    options.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
+                    options.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
+                    options.topAnchor.constraint(equalTo: slot.topAnchor),
+                    options.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
+                ])
+                self.adOptionsView = options
+            }
+
+            // The icon image is already rendered from `iconImage.url` by the
+            // SDK's `StaticNativeRenderer`, so we register no FAN icon view.
+            // Clickable views drive the tap-through (CTA + main image).
+            var clickable: [UIView] = []
+            if let cta = r?.nativeCallToActionTextLabel?() ?? nil { clickable.append(cta) }
+            if let main = r?.nativeMainImageView?() ?? nil { clickable.append(main) }
+
+            ad.registerView(
+                forInteraction: view,
+                mediaView: media,
+                iconView: nil,
+                viewController: viewController,
+                clickableViews: clickable.isEmpty ? nil : clickable
+            )
         }
     }
 
     public func unbind() {
         nativeAd?.unregisterView()
+        mediaView?.removeFromSuperview()
+        mediaView = nil
+        adOptionsView?.removeFromSuperview()
+        adOptionsView = nil
     }
 
     public func cancel() {
