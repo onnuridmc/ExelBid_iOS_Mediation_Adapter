@@ -1,4 +1,4 @@
-// Compatible with: Facebook Audience Network 16.x
+// Compatible with: Facebook Audience Network 6.x
 
 import Foundation
 import UIKit
@@ -103,8 +103,10 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
                 self.adOptionsView = options
             }
 
-            // The icon image is already rendered from `iconImage.url` by the
-            // SDK's `StaticNativeRenderer`, so we register no FAN icon view.
+            // FAN provides no icon URL — the SDK loads the icon into a view we
+            // register. Hand it the host's icon image view when available.
+            let iconImageView = r?.nativeIconImageView?() ?? nil
+
             // Clickable views drive the tap-through (CTA + main image).
             var clickable: [UIView] = []
             if let cta = r?.nativeCallToActionTextLabel?() ?? nil { clickable.append(cta) }
@@ -113,7 +115,7 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
             ad.registerView(
                 forInteraction: view,
                 mediaView: media,
-                iconView: nil,
+                iconImageView: iconImageView,
                 viewController: viewController,
                 clickableViews: clickable.isEmpty ? nil : clickable
             )
@@ -152,8 +154,9 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
         if let v = ad.bodyText             { payload["desc"]  = v }
         if let v = ad.callToAction         { payload["ctatext"] = v }
         if let v = ad.sponsoredTranslation { payload["sponsored"] = v }
-        if let v = ad.iconImage?.url?.absoluteString { payload["icon"] = v }
-        if let v = ad.coverImage?.url?.absoluteString { payload["main"] = v }
+        // FAN exposes no addressable icon/cover URLs — the icon and main
+        // media render through views registered at bind time (icon image
+        // view + `FBMediaView`), so only text assets are carried here.
         let data = (try? JSONSerialization.data(withJSONObject: payload)) ?? Data("{}".utf8)
         return (try? JSONDecoder().decode(EBNativeAdModel.self, from: data))
             ?? (try! JSONDecoder().decode(EBNativeAdModel.self, from: Data("{}".utf8)))
@@ -170,7 +173,7 @@ extension FANNativeAdapter: FBNativeAdDelegate {
     public func nativeAdDidClick(_ nativeAd: FBNativeAd) {
         onClick?()
     }
-    public func nativeAdDidLogImpression(_ nativeAd: FBNativeAd) {
+    public func nativeAdWillLogImpression(_ nativeAd: FBNativeAd) {
         onImpression?()
     }
     public func nativeAdDidFinishHandlingClick(_ nativeAd: FBNativeAd) {

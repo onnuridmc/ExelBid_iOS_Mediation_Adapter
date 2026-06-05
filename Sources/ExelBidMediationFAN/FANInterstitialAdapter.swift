@@ -80,7 +80,7 @@ extension FANInterstitialAdapter: FBInterstitialAdDelegate {
     public func interstitialAdWillDisplay(_ interstitialAd: FBInterstitialAd) {
         onWillAppear?()
     }
-    public func interstitialAdDidLogImpression(_ interstitialAd: FBInterstitialAd) {
+    public func interstitialAdWillLogImpression(_ interstitialAd: FBInterstitialAd) {
         onDidAppear?()
     }
     public func interstitialAdWillClose(_ interstitialAd: FBInterstitialAd) {

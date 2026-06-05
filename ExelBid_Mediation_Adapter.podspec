@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   # Source pod: the Swift import name defaults to `s.name`. Override it so
   # hosts `import ExelBidMediationAdapter` regardless of the pod name.
   s.module_name      = 'ExelBidMediationAdapter'
-  s.version          = '1.1.1'
+  s.version          = '1.1.2'
   s.summary          = 'Third-party network adapters for ExelBid iOS SDK v3 mediation.'
   s.description      = <<-DESC
     Thin bridge adapters between each ad network's iOS SDK and the ExelBid
@@ -20,9 +20,10 @@ Pod::Spec.new do |s|
     :tag => s.version.to_s
   }
 
-  # Base deployment target. AdMob (GoogleMobileAds 12.x) and FAN effectively
-  # require iOS 14 — those subspecs raise it below.
-  s.ios.deployment_target = '13.0'
+  # Deployment target. Both shipped subspecs (AdMob, FAN) require iOS 14,
+  # so the pod's minimum is 14.0. (AdFit, the only iOS 13 adapter, is
+  # SwiftPM-only and not part of this pod.)
+  s.ios.deployment_target = '14.0'
   s.swift_version         = '5.9'
   s.static_framework      = true   # required: GoogleMobileAds ships as a static framework
 
@@ -36,14 +37,12 @@ Pod::Spec.new do |s|
 
   # --- AdMob (Google Mobile Ads) — all 4 formats, SDK on CocoaPods --------
   s.subspec 'AdMob' do |sp|
-    sp.ios.deployment_target = '14.0'
     sp.source_files = 'Sources/ExelBidMediationAdMob/**/*.swift'
     sp.dependency 'Google-Mobile-Ads-SDK', '~> 12.0'
   end
 
   # --- Facebook Audience Network — guarded by #if canImport(FBAudienceNetwork)
   s.subspec 'FAN' do |sp|
-    sp.ios.deployment_target = '14.0'
     sp.source_files = 'Sources/ExelBidMediationFAN/**/*.swift'
     sp.dependency 'FBAudienceNetwork', '~> 6.0'
   end
