@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   # Source pod: the Swift import name defaults to `s.name`. Override it so
   # hosts `import ExelBidMediationAdapter` regardless of the pod name.
   s.module_name      = 'ExelBidMediationAdapter'
-  s.version          = '1.1.0'
+  s.version          = '1.1.1'
   s.summary          = 'Third-party network adapters for ExelBid iOS SDK v3 mediation.'
   s.description      = <<-DESC
     Thin bridge adapters between each ad network's iOS SDK and the ExelBid
@@ -21,7 +21,7 @@ Pod::Spec.new do |s|
   }
 
   # Base deployment target. AdMob (GoogleMobileAds 12.x) and FAN effectively
-  # require iOS 14 — those subspecs raise it below; AdFit stays at 13.
+  # require iOS 14 — those subspecs raise it below.
   s.ios.deployment_target = '13.0'
   s.swift_version         = '5.9'
   s.static_framework      = true   # required: GoogleMobileAds ships as a static framework
@@ -48,10 +48,9 @@ Pod::Spec.new do |s|
     sp.dependency 'FBAudienceNetwork', '~> 6.0'
   end
 
-  # --- Kakao AdFit — guarded by #if canImport(AdFitSDK), no video format ---
-  s.subspec 'AdFit' do |sp|
-    sp.ios.deployment_target = '13.0'
-    sp.source_files = 'Sources/ExelBidMediationAdFit/**/*.swift'
-    sp.dependency 'AdFitSDK', '~> 3.0'
-  end
+  # --- Kakao AdFit — NOT available via CocoaPods ---------------------------
+  # Kakao discontinued CocoaPods distribution of the AdFit SDK, so there is
+  # no `AdFitSDK` pod to depend on. The AdFit adapter is therefore shipped
+  # via SwiftPM only (see Package.swift, which links the official
+  # `adfit-spm` package). No AdFit subspec is provided here.
 end

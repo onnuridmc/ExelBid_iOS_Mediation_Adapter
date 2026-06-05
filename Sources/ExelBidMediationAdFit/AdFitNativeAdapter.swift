@@ -1,4 +1,15 @@
-// Compatible with: Kakao AdFit SDK 3.x
+// Compatible with: Kakao AdFit SDK 3.x (adfit-spm)
+//
+// AdFit's native flow differs from URL-based networks:
+// 1. `AdFitNativeAdLoader` issues the request and yields an
+//    `AdFitNativeAd` carrying text assets (title/body/profile/CTA).
+// 2. AdFit does NOT expose image URLs — the icon and main media render
+//    through SDK-owned views. So `normalise(...)` maps only the text
+//    assets onto `EBNativeAdModel`, and the media is shown at bind time.
+// 3. `bind(view:viewController:)` wraps the host's rendered view in a
+//    bridge that adopts `AdFitNativeAdRenderable`, hands AdFit an
+//    `AdFitMediaView` for the main media slot, and calls `bind(_:)` so
+//    AdFit attaches its own click + impression instrumentation.
 
 import Foundation
 import UIKit
@@ -19,8 +30,11 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
     public var onLeaveApp: (() -> Void)?
     public var onClickFinish: (() -> Void)?
 
-    private var nativeAd: AdFitNativeAdLoader?
+    private var loader: AdFitNativeAdLoader?
     private var loaded: AdFitNativeAd?
+    private var bridge: AdFitRenderableBridge?
+    private var mediaView: AdFitMediaView?
+    private var hiddenMainImageView: UIImageView?
     private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
@@ -36,31 +50,113 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
             self.continuation = cont
             self.resumed = false
             DispatchQueue.main.async {
-                let loader = AdFitNativeAdLoader(clientId: unitId)
-                loader.delegate = self
-                loader.loadAd()
-                self.nativeAd = loader
+                self.startLoad(unitId: unitId, rootViewController: rootViewController)
             }
         }
+    }
+
+    private func startLoad(unitId: String, rootViewController: UIViewController?) {
+        let loader = AdFitNativeAdLoader(
+            clientId: unitId,
+            count: 1,
+            userObject: nil,
+            contentObject: nil
+        )
+        loader.delegate = self
+        loader.rootViewController = rootViewController
+        // A loader is single-use: loadAd may be called only once.
+        loader.loadAd(keyword: nil, regionId: nil, duplicateKey: nil)
+        self.loader = loader
     }
 
     public func bind(view: UIView, viewController: UIViewController?) {
         guard let ad = loaded else { return }
         Task { @MainActor in
-            ad.register(view: view)
+            // AdFit binds against a view adopting `AdFitNativeAdRenderable`.
+            // The host's rendered view conforms to `EBNativeAdRendering`
+            // instead, so wrap it in a bridge (shared reparent helper keeps
+            // the ad exactly where the host positioned it) and map the
+            // outlets across. Returns false if the host view isn't on-screen
+            // yet — nothing for AdFit to bind or track.
+            let bridge = AdFitRenderableBridge(frame: view.frame)
+            guard EBNativeAdContainerReparenter.wrap(view, in: bridge) else {
+                return
+            }
+
+            if let r = view as? EBNativeAdRendering {
+                bridge.titleLabel       = r.nativeTitleTextLabel?() ?? nil
+                bridge.bodyLabel        = r.nativeMainTextLabel?() ?? nil
+                bridge.profileNameLabel = r.nativeSponsoredTextLabel?() ?? nil
+                bridge.profileIconView  = r.nativeIconImageView?() ?? nil
+
+                // AdFit renders the main image / video through an
+                // `AdFitMediaView`. Prefer the host's dedicated media slot;
+                // otherwise overlay one at the main-image view's position and
+                // hide that image view (the SDK-loaded URL image would
+                // otherwise sit behind AdFit's media).
+                if let slot = r.nativeMediaView?() ?? nil {
+                    let media = AdFitMediaView(frame: .zero)
+                    media.translatesAutoresizingMaskIntoConstraints = false
+                    slot.addSubview(media)
+                    NSLayoutConstraint.activate([
+                        media.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
+                        media.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
+                        media.topAnchor.constraint(equalTo: slot.topAnchor),
+                        media.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
+                    ])
+                    bridge.mediaView = media
+                    self.mediaView = media
+                } else if let img = r.nativeMainImageView?() ?? nil,
+                          let parent = img.superview {
+                    let media = AdFitMediaView(frame: .zero)
+                    media.translatesAutoresizingMaskIntoConstraints = false
+                    parent.addSubview(media)
+                    NSLayoutConstraint.activate([
+                        media.leadingAnchor.constraint(equalTo: img.leadingAnchor),
+                        media.trailingAnchor.constraint(equalTo: img.trailingAnchor),
+                        media.topAnchor.constraint(equalTo: img.topAnchor),
+                        media.bottomAnchor.constraint(equalTo: img.bottomAnchor),
+                    ])
+                    img.isHidden = true
+                    self.hiddenMainImageView = img
+                    bridge.mediaView = media
+                    self.mediaView = media
+                }
+                // else: text/icon-only layout — no main media asset to show.
+            }
+
+            // Resolve Auto Layout before AdFit measures the asset views.
+            (bridge.superview ?? bridge).layoutIfNeeded()
+
+            ad.rootViewController = viewController
+            ad.delegate = self
+            ad.bind(bridge)
+            self.bridge = bridge
         }
     }
 
     public func unbind() {
-        loaded?.unregisterView()
+        Task { @MainActor in
+            self.mediaView?.removeFromSuperview()
+            self.mediaView = nil
+            // Restore the host's main image view we hid for the AdFitMediaView,
+            // in case the host view is reused.
+            self.hiddenMainImageView?.isHidden = false
+            self.hiddenMainImageView = nil
+            self.bridge?.removeFromSuperview()
+            self.bridge = nil
+        }
     }
 
     public func cancel() {
-        nativeAd?.delegate = nil
-        nativeAd = nil
+        loader?.delegate = nil
+        loader = nil
+        loaded?.delegate = nil
         loaded = nil
         resume(throwing: CancellationError())
     }
+
+    // MARK: - Helpers
 
     private func resume(returning model: EBNativeAdModel) {
         guard !resumed else { return }
@@ -74,14 +170,17 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
         continuation?.resume(throwing: error); continuation = nil
     }
 
+    /// Map AdFit's text assets onto v3's `EBNativeAdModel`. AdFit exposes no
+    /// image URLs (icon/main render through SDK views at bind time), so only
+    /// the text fields are carried here. `EBNativeAdModel` is JSON-decodable,
+    /// so we build the equivalent payload and decode through it.
     private func normalise(_ ad: AdFitNativeAd) -> EBNativeAdModel {
         var payload: [String: Any] = [:]
-        if let v = ad.title       { payload["title"] = v }
-        if let v = ad.body        { payload["desc"]  = v }
+        if let v = ad.title        { payload["title"] = v }
+        if let v = ad.body         { payload["desc"]  = v }
         if let v = ad.callToAction { payload["ctatext"] = v }
         if let v = ad.profileName  { payload["sponsored"] = v }
-        if let v = ad.iconImageURL?.absoluteString { payload["icon"] = v }
-        if let v = ad.mainImageURL?.absoluteString { payload["main"] = v }
+        if let v = ad.displayUrl   { payload["displayurl"] = v }
         let data = (try? JSONSerialization.data(withJSONObject: payload)) ?? Data("{}".utf8)
         return (try? JSONDecoder().decode(EBNativeAdModel.self, from: data))
             ?? (try! JSONDecoder().decode(EBNativeAdModel.self, from: Data("{}".utf8)))
@@ -89,29 +188,43 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
 }
 
 extension AdFitNativeAdapter: AdFitNativeAdLoaderDelegate {
-    public func adFitNativeAdLoader(
-        _ loader: AdFitNativeAdLoader,
-        didReceive nativeAd: AdFitNativeAd
-    ) {
+    public func nativeAdLoaderDidReceiveAd(_ nativeAd: AdFitNativeAd) {
         self.loaded = nativeAd
-        nativeAd.delegate = self
         resume(returning: normalise(nativeAd))
     }
-    public func adFitNativeAdLoader(
-        _ loader: AdFitNativeAdLoader,
-        didFailToReceiveAdWithError error: Error
+
+    public func nativeAdLoaderDidFailToReceiveAd(
+        _ nativeAdLoader: AdFitNativeAdLoader,
+        error: Error
     ) {
         resume(throwing: error)
     }
 }
 
 extension AdFitNativeAdapter: AdFitNativeAdDelegate {
-    public func adFitNativeAdDidLogImpression(_ nativeAd: AdFitNativeAd) {
-        onImpression?()
-    }
-    public func adFitNativeAdDidClick(_ nativeAd: AdFitNativeAd) {
+    // AdFit's native delegate only reports clicks — there is no impression
+    // callback, so `onImpression*` are driven by ExelBid's own trackers.
+    public func nativeAdDidClickAd(_ nativeAd: AdFitNativeAd) {
         onClick?()
     }
+}
+
+/// Bridges the host's `EBNativeAdRendering` outlets to the
+/// `AdFitNativeAdRenderable` interface AdFit's `bind(_:)` requires.
+final class AdFitRenderableBridge: UIView, AdFitNativeAdRenderable {
+    weak var titleLabel: UILabel?
+    weak var bodyLabel: UILabel?
+    weak var profileNameLabel: UILabel?
+    weak var profileIconView: UIImageView?
+    weak var ctaButton: UIButton?
+    weak var mediaView: AdFitMediaView?
+
+    func adTitleLabel() -> UILabel? { titleLabel }
+    func adBodyLabel() -> UILabel? { bodyLabel }
+    func adCallToActionButton() -> UIButton? { ctaButton }
+    func adProfileNameLabel() -> UILabel? { profileNameLabel }
+    func adProfileIconView() -> UIImageView? { profileIconView }
+    func adMediaView() -> AdFitMediaView? { mediaView }
 }
 
 #else

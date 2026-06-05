@@ -28,14 +28,14 @@ let package = Package(
             url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
             from: "12.0.0"
         ),
-        // Facebook Audience Network (FAN) and Kakao AdFit are NOT
-        // available via SwiftPM. Hosts that use these adapters must
-        // link the third-party SDK themselves (CocoaPods, Carthage,
-        // or a manual binary target). The adapter files use
-        // `#if canImport(...)` so they compile here as no-op
-        // placeholders (isAvailable == false), and the real
-        // implementation is enabled automatically once the host links
-        // the missing SDK.
+        // Kakao AdFit ships an official SwiftPM package (binary xcframework).
+        .package(url: "https://github.com/adfit/adfit-spm", from: "3.21.0"),
+        // Facebook Audience Network (FAN) is NOT available via SwiftPM.
+        // Hosts that use the FAN adapter must link `FBAudienceNetwork`
+        // themselves (CocoaPods, Carthage, or a manual binary target).
+        // The FAN adapter is guarded with `#if canImport(FBAudienceNetwork)`
+        // so it compiles here as a no-op placeholder (isAvailable == false)
+        // and switches to the real implementation once the host links it.
     ],
     targets: [
         .target(
@@ -60,10 +60,8 @@ let package = Package(
         .target(
             name: "ExelBidMediationAdFit",
             dependencies: [
-                .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift")
-                // AdFitSDK: host links it via CocoaPods / manual
-                // binary target. Adapter is guarded with
-                // `#if canImport(AdFitSDK)`.
+                .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift"),
+                .product(name: "AdFitSDK", package: "adfit-spm")
             ],
             path: "Sources/ExelBidMediationAdFit"
         ),

@@ -1,11 +1,10 @@
-// Compatible with: Kakao AdFit SDK 3.x
+// Compatible with: Kakao AdFit SDK 3.x (adfit-spm)
 //
-// NOTE: AdFit is distributed via CocoaPods. To enable this adapter in a
-// SwiftPM-only host, add a binary target for AdFitSDK in the host's
-// own Package.swift or use a SwiftPM bridging shim. The implementation
-// below is wrapped in `#if canImport(AdFitSDK)` so this file compiles
-// even when AdFit is absent — in that case the adapter resolves to
-// `isAvailable == false` and is skipped by the orchestrator.
+// AdFit ships an official SwiftPM package (`adfit-spm`), wired in
+// Package.swift. The implementation below is wrapped in
+// `#if canImport(AdFitSDK)` so the file still compiles if the SDK is
+// absent — in that case the adapter resolves to `isAvailable == false`
+// and is skipped by the orchestrator.
 
 import Foundation
 import UIKit
@@ -84,18 +83,18 @@ public final class AdFitBannerAdapter: NSObject, EBBannerMediationAdapter {
 
 extension AdFitBannerAdapter: AdFitBannerAdViewDelegate {
 
-    public func adFitBannerAdViewDidReceiveAd(_ bannerView: AdFitBannerAdView) {
-        resume(returning: bannerView)
+    public func adViewDidReceiveAd(_ bannerAdView: AdFitBannerAdView) {
+        resume(returning: bannerAdView)
     }
 
-    public func adFitBannerAdView(
-        _ bannerView: AdFitBannerAdView,
-        didFailToReceiveAdWithError error: Error
+    public func adViewDidFailToReceiveAd(
+        _ bannerAdView: AdFitBannerAdView,
+        error: Error
     ) {
         resume(throwing: error)
     }
 
-    public func adFitBannerAdViewDidClickAd(_ bannerView: AdFitBannerAdView) {
+    public func adViewDidClickAd(_ bannerAdView: AdFitBannerAdView) {
         onClick?()
     }
 }

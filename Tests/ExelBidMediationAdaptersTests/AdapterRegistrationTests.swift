@@ -55,12 +55,13 @@ final class AdapterRegistrationTests: XCTestCase {
         )
     }
 
-    func test_adfit_module_registers_banner_interstitial_native() {
+    func test_adfit_module_registers_banner_and_native_only() {
         AdFitMediationModule.register(in: EBMediationRegistry.shared)
         XCTAssertNotNil(EBMediationRegistry.shared.bannerAdapter(for: "adfit"))
-        XCTAssertNotNil(EBMediationRegistry.shared.interstitialAdapter(for: "adfit"))
         XCTAssertNotNil(EBMediationRegistry.shared.nativeAdapter(for: "adfit"))
-        // AdFit SDK has no video format — verify no video registration
+        // AdFit SDK provides no fullscreen interstitial or video format —
+        // verify neither is registered.
+        XCTAssertNil(EBMediationRegistry.shared.interstitialAdapter(for: "adfit"))
         XCTAssertNil(EBMediationRegistry.shared.videoAdapter(for: "adfit"))
     }
 
