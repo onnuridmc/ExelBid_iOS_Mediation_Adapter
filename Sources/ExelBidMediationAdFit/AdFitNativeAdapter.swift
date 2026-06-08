@@ -34,7 +34,6 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
     private var loaded: AdFitNativeAd?
     private var bridge: AdFitRenderableBridge?
     private var mediaView: AdFitMediaView?
-    private var hiddenMainImageView: UIImageView?
     private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
@@ -90,10 +89,10 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
                 bridge.profileIconView  = r.nativeIconImageView?() ?? nil
 
                 // AdFit renders the main image / video through an
-                // `AdFitMediaView`. Prefer the host's dedicated media slot;
-                // otherwise overlay one at the main-image view's position and
-                // hide that image view (the SDK-loaded URL image would
-                // otherwise sit behind AdFit's media).
+                // `AdFitMediaView`, which the SDK fills into the host's
+                // `nativeMediaView()` slot — the single home for the main
+                // creative. Without that slot there is no main media asset to
+                // show (text/icon-only layout).
                 if let slot = r.nativeMediaView?() ?? nil {
                     let media = AdFitMediaView(frame: .zero)
                     media.translatesAutoresizingMaskIntoConstraints = false
@@ -106,23 +105,7 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
                     ])
                     bridge.mediaView = media
                     self.mediaView = media
-                } else if let img = r.nativeMainImageView?() ?? nil,
-                          let parent = img.superview {
-                    let media = AdFitMediaView(frame: .zero)
-                    media.translatesAutoresizingMaskIntoConstraints = false
-                    parent.addSubview(media)
-                    NSLayoutConstraint.activate([
-                        media.leadingAnchor.constraint(equalTo: img.leadingAnchor),
-                        media.trailingAnchor.constraint(equalTo: img.trailingAnchor),
-                        media.topAnchor.constraint(equalTo: img.topAnchor),
-                        media.bottomAnchor.constraint(equalTo: img.bottomAnchor),
-                    ])
-                    img.isHidden = true
-                    self.hiddenMainImageView = img
-                    bridge.mediaView = media
-                    self.mediaView = media
                 }
-                // else: text/icon-only layout — no main media asset to show.
             }
 
             // Resolve Auto Layout before AdFit measures the asset views.
@@ -139,10 +122,6 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
         Task { @MainActor in
             self.mediaView?.removeFromSuperview()
             self.mediaView = nil
-            // Restore the host's main image view we hid for the AdFitMediaView,
-            // in case the host view is reused.
-            self.hiddenMainImageView?.isHidden = false
-            self.hiddenMainImageView = nil
             self.bridge?.removeFromSuperview()
             self.bridge = nil
         }

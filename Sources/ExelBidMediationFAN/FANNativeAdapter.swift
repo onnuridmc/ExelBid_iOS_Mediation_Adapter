@@ -107,10 +107,10 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
             // register. Hand it the host's icon image view when available.
             let iconImageView = r?.nativeIconImageView?() ?? nil
 
-            // Clickable views drive the tap-through (CTA + main image).
-            var clickable: [UIView] = []
+            // Clickable views drive the tap-through (CTA + main media). The
+            // main creative is FAN's own `FBMediaView` in `nativeMediaView()`.
+            var clickable: [UIView] = [media]
             if let cta = r?.nativeCallToActionTextLabel?() ?? nil { clickable.append(cta) }
-            if let main = r?.nativeMainImageView?() ?? nil { clickable.append(main) }
 
             ad.registerView(
                 forInteraction: view,
