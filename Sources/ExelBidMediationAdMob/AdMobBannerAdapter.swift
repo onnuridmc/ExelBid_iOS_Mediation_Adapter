@@ -31,9 +31,12 @@ public final class AdMobBannerAdapter: NSObject, EBBannerMediationAdapter {
     public func load(
         unitId: String,
         size: CGSize,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws -> UIView {
+        // `options` is honoured by AdMob's own request configuration, so
+        // it isn't forwarded here.
         return try await withCheckedThrowingContinuation { cont in
             self.continuation = cont
             self.resumed = false

@@ -39,9 +39,12 @@ public final class AdMobInterstitialAdapter: NSObject, EBInterstitialMediationAd
 
     public func load(
         unitId: String,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws {
+        // `options` is honoured by AdMob's own request configuration, so
+        // it isn't forwarded here.
         try await ad.load(unitId: unitId)
     }
 

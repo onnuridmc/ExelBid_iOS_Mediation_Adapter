@@ -32,9 +32,12 @@ public final class FANInterstitialAdapter: NSObject, EBInterstitialMediationAdap
 
     public func load(
         unitId: String,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws {
+        // `options` is honoured by FAN's own request configuration, so
+        // it isn't forwarded here.
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             self.continuation = cont
             self.resumed = false
@@ -111,7 +114,7 @@ public final class FANInterstitialAdapter: NSObject, EBInterstitialMediationAdap
 
     public override init() { super.init() }
 
-    public func load(unitId: String, rootViewController: UIViewController?, timeout: TimeInterval) async throws {
+    public func load(unitId: String, options: EBAdOptions, rootViewController: UIViewController?, timeout: TimeInterval) async throws {
         throw FANInterstitialAdapterError.sdkNotLinked
     }
     public func present(from viewController: UIViewController) {}

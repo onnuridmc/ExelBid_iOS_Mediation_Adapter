@@ -45,9 +45,12 @@ public final class AdMobVideoAdapter: NSObject, EBVideoMediationAdapter {
 
     public func load(
         unitId: String,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws {
+        // `options` (skip policy etc.) is driven by AdMob's own fullscreen
+        // playback UI, so it isn't forwarded here.
         try await ad.load(unitId: unitId)
     }
 

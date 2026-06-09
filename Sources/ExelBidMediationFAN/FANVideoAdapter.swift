@@ -35,9 +35,12 @@ public final class FANVideoAdapter: NSObject, EBVideoMediationAdapter {
 
     public func load(
         unitId: String,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws {
+        // `options` (skip policy etc.) is driven by FAN's own fullscreen
+        // playback UI, so it isn't forwarded here.
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             self.continuation = cont
             self.resumed = false
@@ -118,7 +121,7 @@ public final class FANVideoAdapter: NSObject, EBVideoMediationAdapter {
 
     public override init() { super.init() }
 
-    public func load(unitId: String, rootViewController: UIViewController?, timeout: TimeInterval) async throws {
+    public func load(unitId: String, options: EBAdOptions, rootViewController: UIViewController?, timeout: TimeInterval) async throws {
         throw FANVideoAdapterError.sdkNotLinked
     }
     public func present(from viewController: UIViewController) {}

@@ -40,9 +40,12 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
     public func load(
         unitId: String,
         desiredAssets: Set<EBNativeAsset>,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws -> EBNativeAdModel {
+        // `options` is honoured by FAN's own request configuration, so
+        // it isn't forwarded here.
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<EBNativeAdModel, Error>) in
             self.continuation = cont
             self.resumed = false
@@ -196,7 +199,7 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
 
     public override init() { super.init() }
 
-    public func load(unitId: String, desiredAssets: Set<EBNativeAsset>, rootViewController: UIViewController?, timeout: TimeInterval) async throws -> EBNativeAdModel {
+    public func load(unitId: String, desiredAssets: Set<EBNativeAsset>, options: EBAdOptions, rootViewController: UIViewController?, timeout: TimeInterval) async throws -> EBNativeAdModel {
         throw FANNativeAdapterError.sdkNotLinked
     }
     public func bind(view: UIView, viewController: UIViewController?) {}

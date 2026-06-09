@@ -31,9 +31,12 @@ public final class AdFitBannerAdapter: NSObject, EBBannerMediationAdapter {
     public func load(
         unitId: String,
         size: CGSize,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws -> UIView {
+        // `options` is honoured by AdFit's own request configuration, so
+        // it isn't forwarded here.
         return try await withCheckedThrowingContinuation { cont in
             self.continuation = cont
             self.resumed = false
@@ -118,6 +121,7 @@ public final class AdFitBannerAdapter: NSObject, EBBannerMediationAdapter {
     public func load(
         unitId: String,
         size: CGSize,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws -> UIView {

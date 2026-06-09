@@ -39,9 +39,12 @@ public final class FANBannerAdapter: NSObject, EBBannerMediationAdapter {
     public func load(
         unitId: String,
         size: CGSize,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws -> UIView {
+        // `options` is honoured by FAN's own request configuration, so
+        // it isn't forwarded here.
         guard let host = rootViewController else {
             throw AdapterError.missingRootViewController
         }
@@ -143,6 +146,7 @@ public final class FANBannerAdapter: NSObject, EBBannerMediationAdapter {
     public func load(
         unitId: String,
         size: CGSize,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws -> UIView {

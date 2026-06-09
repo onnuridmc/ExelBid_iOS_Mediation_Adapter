@@ -41,9 +41,12 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
     public func load(
         unitId: String,
         desiredAssets: Set<EBNativeAsset>,
+        options: EBAdOptions,
         rootViewController: UIViewController?,
         timeout: TimeInterval
     ) async throws -> EBNativeAdModel {
+        // `options` is honoured by AdMob's own request configuration, so
+        // it isn't forwarded here.
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<EBNativeAdModel, Error>) in
             self.continuation = cont
             self.resumed = false
