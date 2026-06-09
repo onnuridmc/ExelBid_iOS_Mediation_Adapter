@@ -13,7 +13,7 @@ API를 바로 사용할 수 있습니다. 여기 있는 어댑터들은 그 미�
 아래 가이드를 참고하세요.
 
 > 📖 **미디에이션 어댑터 사용자 가이드** —
-> [`ExelBid_iOS_Swift` › docs/MEDIATION_ADAPTER_GUIDE.md](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/master/docs/MEDIATION_ADAPTER_GUIDE.md)
+> [`ExelBid_iOS_Swift` › docs/MEDIATION_ADAPTER_GUIDE.md](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/main/MEDIATION_ADAPTER_GUIDE.md)
 >
 > 호스트 통합(배너/전면/네이티브/비디오 호출, `EBNativeAdRendering` 슬롯
 > 구성, `EBAdOptions` 적용 등)은 [ExelBid iOS SDK 문서](https://github.com/onnuridmc/ExelBid_iOS_Swift)
@@ -47,7 +47,7 @@ ExelBid 자체 어댑터는 이 저장소에 없습니다 — 서드파티 의�
   노출하는 방법은 어댑터 가이드의 네이티브 섹션을 참고하세요.
 
 > 위 동작과 슬롯 구성, 옵션 전달 등 자세한 내용은
-> [미디에이션 어댑터 사용자 가이드](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/master/docs/MEDIATION_ADAPTER_GUIDE.md)
+> [미디에이션 어댑터 사용자 가이드](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/main/MEDIATION_ADAPTER_GUIDE.md)
 > 에 정리되어 있습니다.
 
 ## 설치
@@ -169,5 +169,5 @@ banner.load()
 
 > 전면/네이티브/비디오 호출, 워터폴 이벤트, 옵션 설정, 자체 어댑터 작성 등
 > 전체 사용법은
-> [미디에이션 어댑터 사용자 가이드](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/master/docs/MEDIATION_ADAPTER_GUIDE.md)
+> [미디에이션 어댑터 사용자 가이드](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/main/MEDIATION_ADAPTER_GUIDE.md)
 > 를 참고하세요.
