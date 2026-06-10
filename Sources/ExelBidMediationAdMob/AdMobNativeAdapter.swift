@@ -89,7 +89,7 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
             if let r = view as? EBNativeAdRendering {
                 wrapper.headlineView     = r.nativeTitleTextLabel?() ?? nil
                 wrapper.bodyView         = r.nativeMainTextLabel?() ?? nil
-                wrapper.callToActionView = r.nativeCallToActionTextLabel?() ?? nil
+                wrapper.callToActionView = r.nativeCallToActionButton?() ?? nil
                 wrapper.advertiserView   = r.nativeSponsoredTextLabel?() ?? nil
                 wrapper.storeView        = r.nativeDisplayURLTextLabel?() ?? nil
                 wrapper.iconView         = r.nativeIconImageView?() ?? nil

@@ -90,6 +90,9 @@ public final class AdFitNativeAdapter: NSObject, EBNativeMediationAdapter {
                 bridge.bodyLabel        = r.nativeMainTextLabel?() ?? nil
                 bridge.profileNameLabel = r.nativeSponsoredTextLabel?() ?? nil
                 bridge.profileIconView  = r.nativeIconImageView?() ?? nil
+                // AdFit requires a tappable CTA button for `adCallToActionButton()`.
+                // The host exposes its CTA as a `UIButton` via `nativeCallToActionButton()`.
+                bridge.ctaButton        = r.nativeCallToActionButton?() ?? nil
 
                 // AdFit renders the main image / video through an
                 // `AdFitMediaView`, which the SDK fills into the host's

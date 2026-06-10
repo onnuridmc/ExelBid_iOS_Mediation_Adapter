@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   # Source pod: the Swift import name defaults to `s.name`. Override it so
   # hosts `import ExelBidMediationAdapter` regardless of the pod name.
   s.module_name      = 'ExelBidMediationAdapter'
-  s.version          = '1.1.4'
+  s.version          = '1.1.5'
   s.summary          = 'Third-party network adapters for ExelBid iOS SDK v3 mediation.'
   s.description      = <<-DESC
     Thin bridge adapters between each ad network's iOS SDK and the ExelBid

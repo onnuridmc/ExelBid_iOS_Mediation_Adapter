@@ -113,7 +113,7 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
             // Clickable views drive the tap-through (CTA + main media). The
             // main creative is FAN's own `FBMediaView` in `nativeMediaView()`.
             var clickable: [UIView] = [media]
-            if let cta = r?.nativeCallToActionTextLabel?() ?? nil { clickable.append(cta) }
+            if let cta = r?.nativeCallToActionButton?() ?? nil { clickable.append(cta) }
 
             ad.registerView(
                 forInteraction: view,
