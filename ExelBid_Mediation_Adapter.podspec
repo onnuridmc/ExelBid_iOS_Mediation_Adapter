@@ -28,8 +28,8 @@ Pod::Spec.new do |s|
   s.static_framework      = true   # required: GoogleMobileAds ships as a static framework
 
   # Mediation core: protocols, registry, orchestrator. Every adapter needs it.
-  # Match the SwiftPM `from: "3.0.0"` constraint (>= 3.0.0, < 4.0.0).
-  s.dependency 'ExelBid_iOS_Swift', '~> 3.0'
+  # Match the SwiftPM `from: "3.0.4"` constraint (>= 3.0.4, < 4.0.0).
+  s.dependency 'ExelBid_iOS_Swift', '>= 3.0.4', '< 4.0'
 
   # No default_subspec on purpose: integrating bare
   # `pod 'ExelBid_Mediation_Adapter'` would pull every network SDK.

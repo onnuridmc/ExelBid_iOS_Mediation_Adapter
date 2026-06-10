@@ -53,7 +53,7 @@ ExelBid 자체 어댑터는 이 저장소에 없습니다 — 서드파티 의�
 ## 설치
 
 > **버전 호환**: 어댑터는 같은 시점의 `ExelBidSDK`와 함께 사용해야 합니다.
-> `ExelBidSDK` 3.0.3 이상은 어댑터 **1.1.4 이상**이 필요합니다.
+> `ExelBidSDK` 3.0.4 이상은 어댑터 **1.1.5 이상**이 필요합니다.
 
 ### Swift Package Manager
 
@@ -61,9 +61,9 @@ ExelBid 자체 어댑터는 이 저장소에 없습니다 — 서드파티 의�
 // Package.swift
 dependencies: [
     .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Swift.git",
-             from: "3.0.3"),
+             from: "3.0.4"),
     .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Mediation_Adapter.git",
-             from: "1.1.4"),
+             from: "1.1.5"),
 ],
 targets: [
     .target(
@@ -84,8 +84,8 @@ SwiftPM에서는 각 어댑터가 별도 모듈이므로 사용하는 어댑터�
 
 ```ruby
 # Podfile
-pod 'ExelBid_Mediation_Adapter/AdMob', '~> 1.1.4'
-pod 'ExelBid_Mediation_Adapter/FAN',   '~> 1.1.4'
+pod 'ExelBid_Mediation_Adapter/AdMob', '~> 1.1.5'
+pod 'ExelBid_Mediation_Adapter/FAN',   '~> 1.1.5'
 # …실제로 사용하는 subspec만
 ```
 
