@@ -55,6 +55,21 @@ ExelBid 자체 어댑터는 이 저장소에 없습니다 — 서드파티 의�
 > **버전 호환**: 어댑터는 같은 시점의 `ExelBidSDK`와 함께 사용해야 합니다.
 > `ExelBidSDK` 3.0.4 이상은 어댑터 **1.1.5 이상**이 필요합니다.
 
+> ⚠️ **의존성 충돌 주의 — SDK와 어댑터는 같은 의존성 관리자로 통합하세요.**
+> 어댑터는 `ExelBid_iOS_Swift`(미디에이션 코어)를 의존성으로 포함합니다.
+> `ExelBidSDK`를 **SwiftPM으로 추가했다면 어댑터도 SwiftPM으로**,
+> **CocoaPods로 추가했다면 어댑터도 CocoaPods로** 설치해야 합니다.
+> 두 방식을 섞으면(예: SDK는 SPM, 어댑터는 Pod) `ExelBidSDK`·`GoogleMobileAds`가
+> **두 번 링크되어 중복 심볼 / "Multiple commands produce" 빌드 에러**가 발생합니다.
+>
+> - **같은 채널 안에서는 중복 선언이 안전합니다.** 호스트가 이미 `ExelBid_iOS_Swift`를
+>   추가했더라도, SwiftPM·CocoaPods가 동일 의존성을 자동으로 하나로 합칩니다
+>   (별도로 제거할 필요 없음).
+> - **SwiftPM은 패키지 URL(identity)로 동일성을 판단합니다.** 호스트와 어댑터가
+>   반드시 같은 URL `https://github.com/onnuridmc/ExelBid_iOS_Swift` 를 사용해야 합니다.
+>   호스트가 다른 URL이나 로컬 path로 SDK를 추가하면 `ExelBidSDK`가 서로 다른
+>   패키지로 인식되어 **중복 정의 에러**가 납니다.
+
 ### Swift Package Manager
 
 ```swift
