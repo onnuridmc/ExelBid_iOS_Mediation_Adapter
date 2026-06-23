@@ -45,16 +45,22 @@ public final class AdFitBannerAdapter: NSObject, EBBannerMediationAdapter {
                 // AdFit takes a string like "320x50" / "300x250" /
                 // "320x100". Pick by orchestrator-supplied height.
                 let sizeString: String
+                let adSize: CGSize
                 switch Int(size.height) {
-                case 250...:      sizeString = "300x250"
-                case 100...:      sizeString = "320x100"
-                default:          sizeString = "320x50"
+                case 250...:      sizeString = "300x250"; adSize = CGSize(width: 300, height: 250)
+                case 100...:      sizeString = "320x100"; adSize = CGSize(width: 320, height: 100)
+                default:          sizeString = "320x50";  adSize = CGSize(width: 320, height: 50)
                 }
 
                 let view = AdFitBannerAdView(
                     clientId: unitId,
                     adUnitSize: sizeString
                 )
+                // AdFit validates the view's frame against `adUnitSize` when
+                // `loadAd()` is called. Without an explicit frame the bounds
+                // are `.zero`, which it rejects with "TargetView size is
+                // inValid". Give it a frame matching the requested ad size.
+                view.frame = CGRect(origin: .zero, size: adSize)
                 view.rootViewController = rootViewController
                 view.delegate = self
                 view.loadAd()
