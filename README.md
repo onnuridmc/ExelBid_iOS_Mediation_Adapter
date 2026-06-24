@@ -95,6 +95,21 @@ targets: [
 SwiftPM에서는 각 어댑터가 별도 모듈이므로 사용하는 어댑터를 개별 import
 합니다 (`import ExelBidMediationAdMob`).
 
+> **참고 — 안 쓰는 어댑터의 SDK도 resolve(체크아웃)되지만, 빌드엔 포함되지
+> 않습니다.** 어댑터 SDK 의존성은 패키지 레벨에 선언되어 있어, 호스트가 어떤
+> product를 고르든 SwiftPM이 **모든 네트워크 SDK를 resolve** 합니다(예: AdFit
+> 어댑터만 써도 `GoogleMobileAds`가 `Package.resolved`에 함께 pin 됨). 단,
+> SwiftPM은 **앱 타깃이 실제로 의존하는 target만 컴파일·링크**하므로, 쓰지
+> 않는 어댑터의 SDK는 **바이너리에 들어가지 않습니다**. 따라서 미사용 SDK가
+> 체크아웃되어 있어도 **앱 크기·심볼에는 영향이 없고**, CocoaPods 등 다른
+> 매니저와의 충돌도 그 자체로는 발생하지 않습니다(충돌은 *같은* SDK를 두
+> 매니저로 동시에 **링크**할 때만 — 위 ⚠️ 경고 참고).
+>
+> 다만 미사용 SDK도 resolve되므로, 호스트가 같은 SDK(`GoogleMobileAds`·
+> `AdFitSDK`)를 **다른 버전으로 이미 pin** 하고 있으면 해당 어댑터를 쓰지
+> 않더라도 **버전 해석(resolve) 단계에서 충돌**할 수 있습니다. 이 경우 호스트와
+> 어댑터의 SDK 버전 범위를 맞춰 주세요.
+
 ### CocoaPods
 
 ```ruby
@@ -120,24 +135,54 @@ Facebook Audience Network는 SwiftPM 패키지를 제공하지 않습니다. FAN
 수동 binary target으로 링크해야 합니다. FAN SDK가 링크되지 않은 환경에서는
 어댑터가 자동으로 비활성화되며, 링크하면 다음 빌드부터 활성화됩니다.
 
-### AdFit 수동 통합 (SwiftPM을 쓸 수 없는 경우)
+### 네트워크 SDK 배포 채널 (직접 추가용 링크)
 
-CocoaPods 등 SwiftPM이 아닌 환경에서 AdFit을 써야 한다면, AdFit SDK
-바이너리와 어댑터 소스를 수동으로 추가합니다.
+각 네트워크의 iOS SDK는 아래 채널로 배포됩니다. 위의 어댑터 설치(SwiftPM
+product / CocoaPods subspec)를 사용하면 해당 SDK가 의존성으로 **자동 설치**
+되므로 보통 이 표를 직접 쓸 일은 없습니다. 다만 SwiftPM·CocoaPods를 쓸 수
+없거나, 이미 다른 경로로 SDK를 링크하고 있어 **프레임워크를 직접 추가**해야
+하는 경우 아래 링크를 참고하세요.
 
-1. **AdFit SDK 다운로드** — [`adfit-spm`](https://github.com/adfit/adfit-spm)
-   저장소에서 원하는 버전 태그의 `AdFitSDK.xcframework`
-   (`Frameworks/AdFitSDK.xcframework`)를 내려받습니다.
+| 네트워크 SDK | Swift Package Manager | CocoaPods | 직접 다운로드 (xcframework) |
+|---|---|---|---|
+| `GoogleMobileAds` (AdMob) | [`swift-package-manager-google-mobile-ads`](https://github.com/googleads/swift-package-manager-google-mobile-ads.git) · `from: 12.0.0` · product `GoogleMobileAds` | `Google-Mobile-Ads-SDK` `~> 12.0` | [AdMob SDK 다운로드](https://developers.google.com/admob/ios/download) |
+| `FBAudienceNetwork` (FAN) | ❌ 미제공 | `FBAudienceNetwork` `~> 6.0` | [Audience Network SDK 추가 가이드](https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/ios/add-sdk/) |
+| `AdFitSDK` (AdFit) | [`adfit-spm`](https://github.com/adfit/adfit-spm) · `from: 3.21.0` · product `AdFitSDK` | ❌ 미제공 | [`adfit-spm` › Frameworks/AdFitSDK.xcframework](https://github.com/adfit/adfit-spm/tree/main/Frameworks) |
 
-2. **xcframework 임베드** — 받은 `AdFitSDK.xcframework`를 Xcode 타깃의
-   *Frameworks, Libraries, and Embedded Content*에 추가하고 **Embed & Sign**
-   으로 설정합니다.
+### 프레임워크 직접(수동) 추가
 
-3. **어댑터 소스 추가** — 이 저장소의
-   `Sources/ExelBidMediationAdFit/` 안 `.swift` 파일들을 프로젝트에
-   포함합니다.
+SwiftPM·CocoaPods를 쓸 수 없는 환경에서는, 네트워크 SDK 바이너리
+(`.xcframework`)와 이 저장소의 어댑터 소스를 직접 프로젝트에 넣어 통합할 수
+있습니다. 공통 절차는 다음과 같습니다.
 
-> 가능하면 위 과정을 자동으로 처리하는 **SwiftPM 통합을 권장**합니다.
+1. **SDK xcframework 다운로드** — 위 표의 *직접 다운로드* 링크에서 해당
+   네트워크 SDK의 `.xcframework`(및 함께 배포되는 의존 프레임워크)를
+   내려받습니다.
+2. **xcframework 임베드** — Xcode 타깃의 *General › Frameworks, Libraries,
+   and Embedded Content*에 추가하고 **Embed & Sign**으로 설정합니다.
+3. **어댑터 소스 추가** — 이 저장소의 해당 어댑터 폴더(`Sources/ExelBidMediation*/`)
+   안 `.swift` 파일들을 프로젝트에 포함합니다.
+4. **미디에이션 코어** — `ExelBidSDK`(미디에이션 코어)는 호스트가 이미
+   통합한 것을 그대로 사용합니다. 어댑터 소스만 같은 타깃에 추가하면 됩니다.
+
+> 가능하면 위 과정을 자동으로 처리하는 **SwiftPM / CocoaPods 통합을 권장**
+> 합니다. 직접 추가는 SDK 버전 업데이트·의존 프레임워크 관리를 모두 수동으로
+> 해야 합니다.
+
+네트워크별 세부 사항:
+
+- **AdMob** — [AdMob SDK 다운로드 페이지](https://developers.google.com/admob/ios/download)
+  의 zip에는 `GoogleMobileAds.xcframework` 외에 사용자 동의(UMP) 등 **의존
+  프레임워크가 함께** 들어 있습니다. zip에 포함된 xcframework를 **모두**
+  임베드해야 합니다. 어댑터 소스는 `Sources/ExelBidMediationAdMob/`.
+- **FAN** — [Audience Network SDK 추가 가이드](https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/ios/add-sdk/)
+  에서 받은 zip에는 static·dynamic 두 종류의 `FBAudienceNetwork.xcframework`
+  가 들어 있습니다. 프로젝트 구성에 맞는 쪽을 임베드하세요. 어댑터 소스는
+  `Sources/ExelBidMediationFAN/`이며, `#if canImport(FBAudienceNetwork)`로
+  가드되어 SDK가 링크된 다음 빌드부터 활성화됩니다(위 [FAN 통합 방식](#fan-통합-방식) 참고).
+- **AdFit** — [`adfit-spm`](https://github.com/adfit/adfit-spm) 저장소에서
+  원하는 버전 태그의 `Frameworks/AdFitSDK.xcframework`를 내려받아 임베드
+  합니다. 어댑터 소스는 `Sources/ExelBidMediationAdFit/`.
 
 ### iOS 배포 타깃
 
@@ -186,3 +231,22 @@ banner.load()
 > 전체 사용법은
 > [미디에이션 어댑터 사용자 가이드](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/main/MEDIATION_ADAPTER_GUIDE.md)
 > 를 참고하세요.
+
+## AdMob 네이티브 광고 검사기 끄기
+
+AdMob 네이티브 광고를 **테스트 광고**로 띄우면, 레이아웃·정책 위반을 알려주는
+**네이티브 광고 검사기(native ad validator)** 오버레이가 광고 위에 자동으로
+표시됩니다. 실제(라이브) 광고에는 나타나지 않고 테스트 광고에서만 보입니다.
+
+검사기를 끄려면 호스트 앱의 `Info.plist`에 다음 키를 추가합니다(Google Mobile
+Ads SDK 7.68.0 이상 필요).
+
+```xml
+<key>GADNativeAdValidatorEnabled</key>
+<false/>
+```
+
+> 끄면 테스트 광고에서 레이아웃 문제 알림이 더 이상 표시되지 않습니다. 자세한
+> 내용은 [AdMob 네이티브 광고 검사기(iOS)](https://developers.google.com/admob/ios/native/validator?hl=ko)
+> 문서를 참고하세요. (Android는
+> [AndroidManifest 메타데이터](https://developers.google.com/admob/android/native/validator?hl=ko)로 설정)
