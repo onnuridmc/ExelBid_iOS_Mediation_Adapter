@@ -91,8 +91,12 @@ public final class FANNativeAdapter: NSObject, EBNativeMediationAdapter {
             self.mediaView = media
 
             // FAN's AdChoices/ad-options overlay (policy-required). Rendered
-            // into the host's slot when provided.
-            if let slot = r?.nativeAdChoicesView?() ?? nil {
+            // into the host's slot when provided — prefer the dedicated
+            // AdChoices slot, fall back to the privacy-icon slot; when neither
+            // is supplied, skip it (FAN then shows its own default overlay).
+            let adChoicesSlot: UIView? = (r?.nativeAdChoicesView?() ?? nil)
+                ?? (r?.nativePrivacyInformationIconImageView?() ?? nil)
+            if let slot = adChoicesSlot {
                 let options = FBAdOptionsView()
                 options.nativeAd = ad
                 options.translatesAutoresizingMaskIntoConstraints = false

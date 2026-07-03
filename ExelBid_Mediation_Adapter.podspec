@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   # Source pod: the Swift import name defaults to `s.name`. Override it so
   # hosts `import ExelBidMediationAdapter` regardless of the pod name.
   s.module_name      = 'ExelBidMediationAdapter'
-  s.version          = '1.1.6'
+  s.version          = '1.1.7'
   s.summary          = 'Third-party network adapters for ExelBid iOS SDK v3 mediation.'
   s.description      = <<-DESC
     Thin bridge adapters between each ad network's iOS SDK and the ExelBid
@@ -28,8 +28,8 @@ Pod::Spec.new do |s|
   s.static_framework      = true   # required: GoogleMobileAds ships as a static framework
 
   # Mediation core: protocols, registry, orchestrator. Every adapter needs it.
-  # Match the SwiftPM `from: "3.0.4"` constraint (>= 3.0.4, < 4.0.0).
-  s.dependency 'ExelBid_iOS_Swift', '>= 3.0.4', '< 4.0'
+  # Match the SwiftPM `from: "3.0.6"` constraint (>= 3.0.6, < 4.0.0).
+  s.dependency 'ExelBid_iOS_Swift', '>= 3.0.6', '< 4.0'
 
   # No default_subspec on purpose: integrating bare
   # `pod 'ExelBid_Mediation_Adapter'` would pull every network SDK.

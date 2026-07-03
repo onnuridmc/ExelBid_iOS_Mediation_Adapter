@@ -33,6 +33,7 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
     private var nativeAd: GoogleMobileAds.NativeAd?
     private var nativeAdView: NativeAdView?
     private var mediaView: MediaView?
+    private var adChoicesView: AdChoicesView?
     private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
@@ -94,6 +95,33 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
                 wrapper.storeView        = r.nativeDisplayURLTextLabel?() ?? nil
                 wrapper.iconView         = r.nativeIconImageView?() ?? nil
 
+                // AdChoices / privacy-info overlay. AdMob always draws this
+                // itself; the host's only control over its position is the
+                // `adChoicesView` outlet, which must be a `GADAdChoicesView`.
+                // When the host exposes a slot, host an (empty) AdChoicesView
+                // inside it and register that — AdMob then renders AdChoices
+                // there instead of auto-placing it in a corner. Prefer the
+                // dedicated AdChoices slot, fall back to the privacy-icon slot;
+                // when the host supplies neither, leave the outlet nil and
+                // AdMob keeps its default corner placement. The outlet is weak,
+                // so we retain the view ourselves (also lives in the slot's
+                // subtree). Must be set before `nativeAd` is assigned below.
+                let adChoicesSlot: UIView? = (r.nativeAdChoicesView?() ?? nil)
+                    ?? (r.nativePrivacyInformationIconImageView?() ?? nil)
+                if let slot = adChoicesSlot {
+                    let adChoices = AdChoicesView()
+                    adChoices.translatesAutoresizingMaskIntoConstraints = false
+                    slot.addSubview(adChoices)
+                    NSLayoutConstraint.activate([
+                        adChoices.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
+                        adChoices.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
+                        adChoices.topAnchor.constraint(equalTo: slot.topAnchor),
+                        adChoices.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
+                    ])
+                    wrapper.adChoicesView = adChoices
+                    self.adChoicesView = adChoices
+                }
+
                 // AdMob mandates that the main image / video asset render
                 // through a `MediaView` — the `imageView` outlet is rejected
                 // ("MediaView not used for main image or video asset") and
@@ -117,8 +145,6 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
                     self.mediaView = media
                 }
             }
-            // AdChoices is rendered automatically into a corner of the
-            // `NativeAdView`, so no `nativeAdChoicesView()` slot is needed.
 
             // Resolve Auto Layout before AdMob validates asset boundaries.
             // The host view is pinned to fill the wrapper and its asset
@@ -142,6 +168,8 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
         Task { @MainActor in
             self.mediaView?.removeFromSuperview()
             self.mediaView = nil
+            self.adChoicesView?.removeFromSuperview()
+            self.adChoicesView = nil
             self.nativeAdView?.removeFromSuperview()
             self.nativeAdView = nil
         }
