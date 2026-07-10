@@ -21,7 +21,7 @@ let package = Package(
     dependencies: [
         // ExelBid iOS SDK — provides the mediation core every adapter builds on.
         .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Swift",
-                 from: "3.0.6"),
+                 from: "3.0.8"),
 
         // Per-network SDKs. The listed version is the minimum supported major.
         .package(

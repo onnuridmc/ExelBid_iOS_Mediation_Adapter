@@ -37,7 +37,16 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
     private var continuation: CheckedContinuation<EBNativeAdModel, Error>?
     private var resumed = false
 
+    /// Host's preferred media-slot fill, forwarded by the façade before
+    /// `bind(...)`. AdMob's `MediaView` honours `UIView.contentMode`, so we
+    /// apply it to the `MediaView` we host in `nativeMediaView()`.
+    private var mediaContentMode: EBNativeMediaContentMode = .scaleAspectFit
+
     public override init() { super.init() }
+
+    public func setMediaContentMode(_ mode: EBNativeMediaContentMode) {
+        mediaContentMode = mode
+    }
 
     public func load(
         unitId: String,
@@ -133,6 +142,13 @@ public final class AdMobNativeAdapter: NSObject, EBNativeMediationAdapter {
                 if let slot = r.nativeMediaView?() ?? nil {
                     let media = MediaView()
                     media.translatesAutoresizingMaskIntoConstraints = false
+                    // AdMob's MediaView honours UIView.contentMode for image
+                    // creatives; forward the host's fit/fill preference. Aspect
+                    // ratio is always preserved (fit ↔ .scaleAspectFit,
+                    // fill ↔ .scaleAspectFill). Video creatives are sized by the
+                    // MediaView itself and ignore this.
+                    media.contentMode = self.mediaContentMode.imageContentMode
+                    media.clipsToBounds = true
                     slot.addSubview(media)
                     NSLayoutConstraint.activate([
                         media.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
