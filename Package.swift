@@ -24,9 +24,15 @@ let package = Package(
                  from: "3.0.8"),
 
         // Per-network SDKs. The listed version is the minimum supported major.
+        // GoogleMobileAds spans two majors: 12.x and 13.x are both supported
+        // and verified to type-check. `from:` is `.upToNextMajor` and would
+        // cap this at 12.x, so the range is spelled out. 14.x is excluded
+        // until the adapter is built against it — 13.0 deprecated
+        // `currentOrientationAnchoredAdaptiveBanner(width:)`, which is a
+        // likely removal in 14 and would break host builds.
         .package(
             url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
-            from: "12.0.0"
+            "12.0.0" ..< "14.0.0"
         ),
         // Kakao AdFit ships an official SwiftPM package (binary xcframework).
         .package(url: "https://github.com/adfit/adfit-spm", from: "3.21.0"),

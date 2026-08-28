@@ -23,7 +23,7 @@ API를 바로 사용할 수 있습니다. 여기 있는 어댑터들은 그 미�
 
 | 모듈 | 네트워크 | Banner | Interstitial | Native | Video | 기반 SDK | 최소 iOS | 배포 방식 |
 |---|---|:-:|:-:|:-:|:-:|---|---|---|
-| `ExelBidMediationAdMob` | Google AdMob | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `GoogleMobileAds` 12.x | 14 | SwiftPM · CocoaPods |
+| `ExelBidMediationAdMob` | Google AdMob | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `GoogleMobileAds` 12.x–13.x | 14 | SwiftPM · CocoaPods |
 | `ExelBidMediationFAN` | Facebook Audience Network | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `FBAudienceNetwork` 6.x+ | 14 | CocoaPods (호스트 링크) |
 | `ExelBidMediationAdFit` | Kakao AdFit | ✅ | — | ✅ | — | `AdFitSDK` 3.x | 13 | SwiftPM 전용 |
 
@@ -53,7 +53,7 @@ ExelBid 자체 어댑터는 이 저장소에 없습니다 — 서드파티 의�
 ## 설치
 
 > **버전 호환**: 어댑터는 같은 시점의 `ExelBidSDK`와 함께 사용해야 합니다.
-> `ExelBidSDK` 3.0.4 이상은 어댑터 **1.1.5 이상**이 필요합니다.
+> 어댑터 **1.1.9**는 `ExelBidSDK` **3.0.8 이상**(4.0 미만)을 요구합니다.
 
 > ⚠️ **의존성 충돌 주의 — SDK와 어댑터는 같은 의존성 관리자로 통합하세요.**
 > 어댑터는 `ExelBid_iOS_Swift`(미디에이션 코어)를 의존성으로 포함합니다.
@@ -76,9 +76,9 @@ ExelBid 자체 어댑터는 이 저장소에 없습니다 — 서드파티 의�
 // Package.swift
 dependencies: [
     .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Swift.git",
-             from: "3.0.4"),
+             from: "3.0.8"),
     .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Mediation_Adapter.git",
-             from: "1.1.5"),
+             from: "1.1.9"),
 ],
 targets: [
     .target(
@@ -114,8 +114,8 @@ SwiftPM에서는 각 어댑터가 별도 모듈이므로 사용하는 어댑터�
 
 ```ruby
 # Podfile
-pod 'ExelBid_Mediation_Adapter/AdMob', '~> 1.1.5'
-pod 'ExelBid_Mediation_Adapter/FAN',   '~> 1.1.5'
+pod 'ExelBid_Mediation_Adapter/AdMob', '~> 1.1.9'
+pod 'ExelBid_Mediation_Adapter/FAN',   '~> 1.1.9'
 # …실제로 사용하는 subspec만
 ```
 
@@ -145,7 +145,7 @@ product / CocoaPods subspec)를 사용하면 해당 SDK가 의존성으로 **자
 
 | 네트워크 SDK | Swift Package Manager | CocoaPods | 직접 다운로드 (xcframework) |
 |---|---|---|---|
-| `GoogleMobileAds` (AdMob) | [`swift-package-manager-google-mobile-ads`](https://github.com/googleads/swift-package-manager-google-mobile-ads.git) · `from: 12.0.0` · product `GoogleMobileAds` | `Google-Mobile-Ads-SDK` `~> 12.0` | [AdMob SDK 다운로드](https://developers.google.com/admob/ios/download) |
+| `GoogleMobileAds` (AdMob) | [`swift-package-manager-google-mobile-ads`](https://github.com/googleads/swift-package-manager-google-mobile-ads.git) · `"12.0.0" ..< "14.0.0"` · product `GoogleMobileAds` | `Google-Mobile-Ads-SDK` `>= 12.0, < 14.0` | [AdMob SDK 다운로드](https://developers.google.com/admob/ios/download) |
 | `FBAudienceNetwork` (FAN) | ❌ 미제공 | `FBAudienceNetwork` `~> 6.0` | [Audience Network SDK 추가 가이드](https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/ios/add-sdk/) |
 | `AdFitSDK` (AdFit) | [`adfit-spm`](https://github.com/adfit/adfit-spm) · `from: 3.21.0` · product `AdFitSDK` | ❌ 미제공 | [`adfit-spm` › Frameworks/AdFitSDK.xcframework](https://github.com/adfit/adfit-spm/tree/main/Frameworks) |
 
