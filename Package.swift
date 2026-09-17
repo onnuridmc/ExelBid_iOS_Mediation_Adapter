@@ -8,7 +8,7 @@ import PackageDescription
 let package = Package(
     name: "ExelBidMediationAdapters",
     platforms: [
-        .iOS(.v13)
+        .iOS(.v15)
     ],
     products: [
         .library(name: "ExelBidMediationAdMob",
@@ -17,6 +17,10 @@ let package = Package(
                  targets: ["ExelBidMediationFAN"]),
         .library(name: "ExelBidMediationAdFit",
                  targets: ["ExelBidMediationAdFit"]),
+        // Opposite direction from the adapters above: lets an AdMob-mediated
+        // host call ExelBid as a custom event in its own waterfall.
+        .library(name: "ExelBidAdMobCustomEvent",
+                 targets: ["ExelBidAdMobCustomEvent"]),
     ],
     dependencies: [
         // ExelBid iOS SDK — provides the mediation core every adapter builds on.
@@ -72,6 +76,16 @@ let package = Package(
             path: "Sources/ExelBidMediationAdFit"
         ),
 
+        .target(
+            name: "ExelBidAdMobCustomEvent",
+            dependencies: [
+                .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift"),
+                .product(name: "GoogleMobileAds",
+                         package: "swift-package-manager-google-mobile-ads")
+            ],
+            path: "Sources/ExelBidAdMobCustomEvent"
+        ),
+
         // Smoke-test target covering adapter registration.
         .testTarget(
             name: "ExelBidMediationAdaptersTests",
@@ -79,6 +93,7 @@ let package = Package(
                 "ExelBidMediationAdMob",
                 "ExelBidMediationFAN",
                 "ExelBidMediationAdFit",
+                "ExelBidAdMobCustomEvent",
                 .product(name: "ExelBidSDK", package: "ExelBid_iOS_Swift")
             ],
             path: "Tests/ExelBidMediationAdaptersTests"

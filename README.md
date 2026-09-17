@@ -19,13 +19,17 @@ API를 바로 사용할 수 있습니다. 여기 있는 어댑터들은 그 미�
 > 구성, `EBAdOptions` 적용 등)은 [ExelBid iOS SDK 문서](https://github.com/onnuridmc/ExelBid_iOS_Swift)
 > 의 미디에이션 항목에 정리되어 있습니다.
 
+> 🔁 **앱이 AdMob 미디에이션을 사용한다면** — AdMob waterfall에서 ExelBid를
+> 호출하는 [AdMob 커스텀 이벤트](#admob-커스텀-이벤트-admob-미디에이션--exelbid)
+> 를 참고하세요.
+
 ## 어댑터 인벤토리
 
 | 모듈 | 네트워크 | Banner | Interstitial | Native | Video | 기반 SDK | 최소 iOS | 배포 방식 |
 |---|---|:-:|:-:|:-:|:-:|---|---|---|
-| `ExelBidMediationAdMob` | Google AdMob | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `GoogleMobileAds` 12.x–13.x | 14 | SwiftPM · CocoaPods |
-| `ExelBidMediationFAN` | Facebook Audience Network | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `FBAudienceNetwork` 6.x+ | 14 | CocoaPods (호스트 링크) |
-| `ExelBidMediationAdFit` | Kakao AdFit | ✅ | — | ✅ | — | `AdFitSDK` 3.x | 13 | SwiftPM 전용 |
+| `ExelBidMediationAdMob` | Google AdMob | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `GoogleMobileAds` 12.x–13.x | 15 | SwiftPM · CocoaPods |
+| `ExelBidMediationFAN` | Facebook Audience Network | ✅ | ✅ | ✅ | ✅ (전면 비디오) | `FBAudienceNetwork` 6.x+ | 15 | CocoaPods (호스트 링크) |
+| `ExelBidMediationAdFit` | Kakao AdFit | ✅ | — | ✅ | — | `AdFitSDK` 3.x | 15 | SwiftPM 전용 |
 
 그 외 네트워크는 순차적으로 지원될 예정입니다. 서버 워터폴에 아직 지원되지
 않는 네트워크가 포함되어 있으면 자동으로 건너뛰고 다음 네트워크로
@@ -53,7 +57,7 @@ ExelBid 자체 어댑터는 이 저장소에 없습니다 — 서드파티 의�
 ## 설치
 
 > **버전 호환**: 어댑터는 같은 시점의 `ExelBidSDK`와 함께 사용해야 합니다.
-> 어댑터 **1.1.9**는 `ExelBidSDK` **3.0.8 이상**(4.0 미만)을 요구합니다.
+> 어댑터 **1.2.0**은 `ExelBidSDK` **3.0.8 이상**(4.0 미만)을 요구합니다.
 
 > ⚠️ **의존성 충돌 주의 — SDK와 어댑터는 같은 의존성 관리자로 통합하세요.**
 > 어댑터는 `ExelBid_iOS_Swift`(미디에이션 코어)를 의존성으로 포함합니다.
@@ -78,7 +82,7 @@ dependencies: [
     .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Swift.git",
              from: "3.0.8"),
     .package(url: "https://github.com/onnuridmc/ExelBid_iOS_Mediation_Adapter.git",
-             from: "1.1.9"),
+             from: "1.2.0"),
 ],
 targets: [
     .target(
@@ -114,8 +118,8 @@ SwiftPM에서는 각 어댑터가 별도 모듈이므로 사용하는 어댑터�
 
 ```ruby
 # Podfile
-pod 'ExelBid_Mediation_Adapter/AdMob', '~> 1.1.9'
-pod 'ExelBid_Mediation_Adapter/FAN',   '~> 1.1.9'
+pod 'ExelBid_Mediation_Adapter/AdMob', '~> 1.2.0'
+pod 'ExelBid_Mediation_Adapter/FAN',   '~> 1.2.0'
 # …실제로 사용하는 subspec만
 ```
 
@@ -186,10 +190,9 @@ SwiftPM·CocoaPods를 쓸 수 없는 환경에서는, 네트워크 SDK 바이너
 
 ### iOS 배포 타깃
 
-`ExelBidSDK` 자체는 iOS 13+를 지원합니다. 각 어댑터는 (ExelBidSDK, 기반
-네트워크 SDK) 중 **최댓값**을 따릅니다 — 어댑터별 최소값은 위 표에
-정리되어 있습니다. iOS 14+ 어댑터(예: AdMob)를 iOS 13 타깃 호스트에 링크하면
-실패하므로, 어댑터 추가 전에 호스트의 배포 타깃을 올려야 합니다.
+이 저장소의 모든 어댑터는 **iOS 15 이상**을 요구합니다. `ExelBidSDK` 자체는
+iOS 13+를 지원하지만, 어댑터를 추가하려면 호스트의 배포 타깃을 15.0 이상으로
+올려야 합니다. iOS 15 미만 타깃 호스트에 어댑터를 링크하면 빌드가 실패합니다.
 
 ## 빠른 시작
 
@@ -231,6 +234,25 @@ banner.load()
 > 전체 사용법은
 > [미디에이션 어댑터 사용자 가이드](https://github.com/onnuridmc/ExelBid_iOS_Swift/blob/main/MEDIATION_ADAPTER_GUIDE.md)
 > 를 참고하세요.
+
+## AdMob 커스텀 이벤트 (AdMob 미디에이션 → ExelBid)
+
+위 어댑터들과 **호출 방향이 반대**인 모듈입니다. 앱이 AdMob 미디에이션을
+메인으로 사용할 때, AdMob 콘솔에 ExelBid를 **커스텀 이벤트(waterfall)** 로
+등록해 광고 소스로 추가합니다. 앱의 AdMob 광고 코드는 그대로 두고, AdMob
+콘솔 설정과 모듈 추가만으로 ExelBid 광고를 받을 수 있습니다.
+
+| 모듈 | 미디에이션 주체 | Banner | Interstitial | Native | 기반 SDK | 최소 iOS | 배포 방식 |
+|---|---|:-:|:-:|:-:|---|---|---|
+| `ExelBidAdMobCustomEvent` | Google AdMob | ✅ | ✅ | ✅ (이미지) | `GoogleMobileAds` 12.x–13.x | 15 | SwiftPM 전용 |
+
+- AdMob 콘솔 **Class Name**: `ExelBidCustomEvent`
+- AdMob 콘솔 **Parameter**: 포맷별 ExelBid 광고 단위 ID
+- 키워드 등 타게팅 값은 GMA 요청에 `ExelBidAdMobExtras`를 등록해 전달합니다.
+- 보상형 · 보상형 전면 · 앱 오프닝 · 영상 네이티브는 지원하지 않습니다.
+
+> 📖 설치, 콘솔 설정, 포맷별 앱 코드(Swift / Objective-C), 테스트 방법은
+> [AdMob 커스텀 이벤트 연동 가이드](ADMOB_CUSTOM_EVENT_GUIDE.md)를 참고하세요.
 
 ## AdMob 네이티브 광고 검사기 끄기
 

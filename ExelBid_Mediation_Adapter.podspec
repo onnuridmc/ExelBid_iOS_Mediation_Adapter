@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   # Source pod: the Swift import name defaults to `s.name`. Override it so
   # hosts `import ExelBidMediationAdapter` regardless of the pod name.
   s.module_name      = 'ExelBidMediationAdapter'
-  s.version          = '1.1.9'
+  s.version          = '1.2.0'
   s.summary          = 'Third-party network adapters for ExelBid iOS SDK v3 mediation.'
   s.description      = <<-DESC
     Thin bridge adapters between each ad network's iOS SDK and the ExelBid
@@ -20,10 +20,10 @@ Pod::Spec.new do |s|
     :tag => s.version.to_s
   }
 
-  # Deployment target. Both shipped subspecs (AdMob, FAN) require iOS 14,
-  # so the pod's minimum is 14.0. (AdFit, the only iOS 13 adapter, is
-  # SwiftPM-only and not part of this pod.)
-  s.ios.deployment_target = '14.0'
+  # Deployment target. Every adapter in this repo requires iOS 15,
+  # so the pod's minimum is 15.0. (AdFit is SwiftPM-only and not part of
+  # this pod.)
+  s.ios.deployment_target = '15.0'
   s.swift_version         = '5.9'
   s.static_framework      = true   # required: GoogleMobileAds ships as a static framework
 
